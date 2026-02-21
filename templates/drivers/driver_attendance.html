@@ -1,0 +1,308 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ driver.full_name }} - Attendance - FleetFlow{% endblock %}
+
+{% block page_title %}Driver Attendance{% endblock %}
+
+
+{% block content %}
+<div class="row">
+    <!-- Driver Information -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Driver Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if driver.profile_picture %}
+                        <img src="{{ driver.profile_picture.url }}" alt="{{ driver.full_name }}" class="rounded-circle" width="80" height="80">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person text-white" style="font-size: 2rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <h5 class="text-center">{{ driver.full_name }}</h5>
+                <p class="text-center text-muted">{{ driver.employee_id }}</p>
+                <hr>
+                <div class="mb-2">
+                    <strong>Status:</strong>
+                    {% if driver.status == 'on_duty' %}
+                        <span class="badge bg-success status-badge">{{ driver.get_status_display }}</span>
+                    {% elif driver.status == 'off_duty' %}
+                        <span class="badge bg-secondary status-badge">{{ driver.get_status_display }}</span>
+                    {% elif driver.status == 'suspended' %}
+                        <span class="badge bg-warning status-badge">{{ driver.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-info status-badge">{{ driver.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="mb-2">
+                    <strong>Phone:</strong> {{ driver.phone }}
+                </div>
+                <div class="mb-2">
+                    <strong>Email:</strong> {{ driver.email }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Attendance Records</h6>
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAttendanceModal">
+                        <i class="bi bi-plus-circle"></i> Add Attendance
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filter Section -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="month_filter" class="form-label">Month</label>
+                        <select class="form-select" id="month_filter">
+                            <option value="">All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="year_filter" class="form-label">Year</label>
+                        <select class="form-select" id="year_filter">
+                            <option value="">All Years</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="filterAttendance()">
+                            <i class="bi bi-funnel"></i> Apply Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Present</h5>
+                                <h3 id="present_count">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Absent</h5>
+                                <h3 id="absent_count">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Late</h5>
+                                <h3 id="late_count">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Leave</h5>
+                                <h3 id="leave_count">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered datatable" id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Status</th>
+                                <th>Hours Worked</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sample attendance records -->
+                            <tr>
+                                <td>2024-02-20</td>
+                                <td>08:45 AM</td>
+                                <td>06:30 PM</td>
+                                <td><span class="badge bg-success">Present</span></td>
+                                <td>9h 45m</td>
+                                <td>-</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2024-02-19</td>
+                                <td>09:15 AM</td>
+                                <td>06:45 PM</td>
+                                <td><span class="badge bg-warning">Late</span></td>
+                                <td>9h 30m</td>
+                                <td>Traffic delay</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2024-02-18</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><span class="badge bg-info">Leave</span></td>
+                                <td>-</td>
+                                <td>Sick leave</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Attendance Modal -->
+<div class="modal fade" id="addAttendanceModal" tabindex="-1" aria-labelledby="addAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAttendanceModalLabel">Add Attendance Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="attendanceForm">
+                    <div class="mb-3">
+                        <label for="attendance_date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="attendance_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="check_in" class="form-label">Check In</label>
+                        <input type="time" class="form-control" id="check_in">
+                    </div>
+                    <div class="mb-3">
+                        <label for="check_out" class="form-label">Check Out</label>
+                        <input type="time" class="form-control" id="check_out">
+                    </div>
+                    <div class="mb-3">
+                        <label for="attendance_status" class="form-label">Status</label>
+                        <select class="form-select" id="attendance_status" required>
+                            <option value="">Select Status</option>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                            <option value="leave">Leave</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="attendance_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="attendance_notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAttendance()">Save Attendance</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#attendanceTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[0, 'desc']],
+        dom: 'Bfrtip',
+        buttons: [
+            'excel', 'pdf', 'print'
+        ]
+    });
+
+    // Calculate attendance summary
+    calculateAttendanceSummary();
+});
+
+function calculateAttendanceSummary() {
+    let present = 0, absent = 0, late = 0, leave = 0;
+    
+    $('#attendanceTable tbody tr').each(function() {
+        const status = $(this).find('td:eq(3) span').text().toLowerCase();
+        if (status === 'present') present++;
+        else if (status === 'absent') absent++;
+        else if (status === 'late') late++;
+        else if (status === 'leave') leave++;
+    });
+    
+    $('#present_count').text(present);
+    $('#absent_count').text(absent);
+    $('#late_count').text(late);
+    $('#leave_count').text(leave);
+}
+
+function filterAttendance() {
+    const month = $('#month_filter').val();
+    const year = $('#year_filter').val();
+    
+    // This would typically make an AJAX call to filter the data
+    console.log('Filtering by month:', month, 'year:', year);
+    
+    // For now, just show a message
+    alert('Filter functionality would be implemented here');
+}
+
+function saveAttendance() {
+    const formData = {
+        date: $('#attendance_date').val(),
+        check_in: $('#check_in').val(),
+        check_out: $('#check_out').val(),
+        status: $('#attendance_status').val(),
+        notes: $('#attendance_notes').val()
+    };
+    
+    // This would typically make an AJAX call to save the data
+    console.log('Saving attendance:', formData);
+    
+    // For now, just show a success message and close modal
+    alert('Attendance record saved successfully!');
+    $('#addAttendanceModal').modal('hide');
+    
+    // Reset form
+    $('#attendanceForm')[0].reset();
+}
+</script>
+{% endblock %}

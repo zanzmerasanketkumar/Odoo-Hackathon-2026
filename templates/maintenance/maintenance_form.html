@@ -1,0 +1,147 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Maintenance{% else %}Schedule Maintenance{% endif %} - FleetFlow{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Edit Maintenance{% else %}Schedule Maintenance{% endif %}{% endblock %}
+
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    {% if form.instance.pk %}Edit Maintenance{% else %}Schedule New Maintenance{% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.vehicle.id_for_label }}" class="form-label">Vehicle</label>
+                            {{ form.vehicle }}
+                            {% if form.vehicle.errors %}
+                                <div class="text-danger small">
+                                    {{ form.vehicle.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.maintenance_type.id_for_label }}" class="form-label">Maintenance Type</label>
+                            {{ form.maintenance_type }}
+                            {% if form.maintenance_type.errors %}
+                                <div class="text-danger small">
+                                    {{ form.maintenance_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="text-danger small">
+                                    {{ form.priority.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">
+                                {{ form.description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">Scheduled Date</label>
+                            {{ form.scheduled_date }}
+                            {% if form.scheduled_date.errors %}
+                                <div class="text-danger small">
+                                    {{ form.scheduled_date.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.estimated_duration_hours.id_for_label }}" class="form-label">Estimated Duration (hours)</label>
+                            {{ form.estimated_duration_hours }}
+                            {% if form.estimated_duration_hours.errors %}
+                                <div class="text-danger small">
+                                    {{ form.estimated_duration_hours.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.estimated_cost.id_for_label }}" class="form-label">Estimated Cost ($)</label>
+                            {{ form.estimated_cost }}
+                            {% if form.estimated_cost.errors %}
+                                <div class="text-danger small">
+                                    {{ form.estimated_cost.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.odometer_reading.id_for_label }}" class="form-label">Odometer Reading (km)</label>
+                            {{ form.odometer_reading }}
+                            {% if form.odometer_reading.errors %}
+                                <div class="text-danger small">
+                                    {{ form.odometer_reading.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.performed_by.id_for_label }}" class="form-label">Performed By</label>
+                            {{ form.performed_by }}
+                            {% if form.performed_by.errors %}
+                                <div class="text-danger small">
+                                    {{ form.performed_by.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {% if form.instance.pk %}Update Maintenance{% else %}Schedule Maintenance{% endif %}
+                        </button>
+                        <a href="{% url 'maintenance:maintenance_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

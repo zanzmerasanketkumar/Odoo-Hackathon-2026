@@ -1,0 +1,458 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard - FleetFlow{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_subtitle %}Welcome back, {{ user.get_full_name|default:user.username }}! Here's what's happening with your fleet today.{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="kpi-label">Total Vehicles</p>
+                    <h3 class="kpi-value">{{ total_vehicles|default:0 }}</h3>
+                    <div class="kpi-change positive">
+                        <i class="bi bi-truck"></i> {{ available_vehicles|default:0 }} available
+                    </div>
+                </div>
+                <div class="text-primary">
+                    <i class="bi bi-truck" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="kpi-label">Active Trips</p>
+                    <h3 class="kpi-value">{{ active_trips|default:0 }}</h3>
+                    <div class="kpi-change positive">
+                        <i class="bi bi-route"></i> {{ completed_trips|default:0 }} completed
+                    </div>
+                </div>
+                <div class="text-success">
+                    <i class="bi bi-route" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="kpi-label">Fuel Efficiency</p>
+                    <h3 class="kpi-value">{{ fuel_efficiency|floatformat:1|default:"0.0" }}</h3>
+                    <div class="kpi-change neutral">
+                        <i class="bi bi-speedometer2"></i> km/l average
+                    </div>
+                </div>
+                <div class="text-warning">
+                    <i class="bi bi-fuel-pump" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="kpi-label">Maintenance Due</p>
+                    <h3 class="kpi-value">{{ maintenance_due|default:0 }}</h3>
+                    <div class="kpi-change {% if overdue_maintenance %}negative{% else %}positive{% endif %}">
+                        <i class="bi bi-exclamation-triangle"></i> {% if overdue_maintenance %}{{ overdue_maintenance }} overdue{% else %}On schedule{% endif %}
+                    </div>
+                </div>
+                <div class="text-danger">
+                    <i class="bi bi-tools" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Tables -->
+<div class="row">
+    <!-- Fuel Consumption Chart -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-graph-up text-primary me-2"></i>
+                    Fuel Consumption Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="fuelChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vehicle Status -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-pie-chart text-success me-2"></i>
+                    Vehicle Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-2">
+                    <canvas id="vehicleStatusChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    <span class="me-2">
+                        <i class="bi bi-circle-fill text-primary"></i> Available ({{ available_vehicles|default:0 }})
+                    </span>
+                    <span class="me-2">
+                        <i class="bi bi-circle-fill text-warning"></i> On Trip ({{ on_trip_vehicles|default:0 }})
+                    </span>
+                    <span class="me-2">
+                        <i class="bi bi-circle-fill text-danger"></i> In Shop ({{ in_shop_vehicles|default:0 }})
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <!-- Recent Trips -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-route text-info me-2"></i>
+                    Recent Trips
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_trips %}
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <thead>
+                            <tr>
+                                <th>Trip</th>
+                                <th>Vehicle</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trip in recent_trips %}
+                            <tr>
+                                <td>
+                                    <strong>{{ trip.trip_number }}</strong><br>
+                                    <small class="text-muted">{{ trip.origin }} → {{ trip.destination }}</small>
+                                </td>
+                                <td>
+                                    {% if trip.vehicle %}
+                                        <strong>{{ trip.vehicle.make }} {{ trip.vehicle.model }}</strong><br>
+                                        <small class="text-muted">{{ trip.vehicle.license_plate }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if trip.status == 'dispatched' %}
+                                        <span class="status-indicator pending">
+                                            <span class="status-dot"></span>
+                                            Dispatched
+                                        </span>
+                                    {% elif trip.status == 'in_progress' %}
+                                        <span class="status-indicator online">
+                                            <span class="status-dot"></span>
+                                            In Progress
+                                        </span>
+                                    {% elif trip.status == 'completed' %}
+                                        <span class="status-indicator offline">
+                                            <span class="status-dot"></span>
+                                            Completed
+                                        </span>
+                                    {% else %}
+                                        <span class="status-indicator offline">
+                                            <span class="status-dot"></span>
+                                            {{ trip.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 6px;">
+                                        {% if trip.status == 'completed' %}
+                                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                        {% elif trip.status == 'in_progress' %}
+                                            <div class="progress-bar bg-success" style="width: 75%"></div>
+                                        {% elif trip.status == 'dispatched' %}
+                                            <div class="progress-bar bg-warning" style="width: 25%"></div>
+                                        {% else %}
+                                            <div class="progress-bar bg-secondary" style="width: 0%"></div>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">
+                                        {% if trip.status == 'completed' %}100%
+                                        {% elif trip.status == 'in_progress' %}75%
+                                        {% elif trip.status == 'dispatched' %}25%
+                                        {% else %}0%
+                                        {% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-route text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No trips available</p>
+                    <a href="{% url 'trips:trip_create' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Create First Trip
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Maintenance Alerts -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    Maintenance Alerts
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if maintenance_alerts %}
+                <div class="list-group list-group-flush">
+                    {% for maintenance in maintenance_alerts %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <h6 class="mb-1">{{ maintenance.maintenance_type.name }}</h6>
+                            <small class="text-muted">
+                                {% if maintenance.vehicle %}
+                                    {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }} - 
+                                    {{ maintenance.vehicle.license_plate }}
+                                {% else %}
+                                    Vehicle not assigned
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            {% now "Y-m-d" as today_date %}
+                            {% if maintenance.scheduled_date < today_date %}
+                                <span class="badge bg-danger">Overdue</span>
+                                <br>
+                                <small class="text-muted">Due {{ maintenance.scheduled_date|timesince }} ago</small>
+                            {% else %}
+                                {% if maintenance.priority == 'urgent' %}
+                                    <span class="badge bg-danger">Urgent</span>
+                                {% elif maintenance.priority == 'high' %}
+                                    <span class="badge bg-warning">High Priority</span>
+                                {% elif maintenance.priority == 'medium' %}
+                                    <span class="badge bg-info">Medium Priority</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Low Priority</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">Due {{ maintenance.scheduled_date|timeuntil }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-tools text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No maintenance scheduled</p>
+                    <a href="{% url 'maintenance:maintenance_create' %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i> Schedule Maintenance
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-lightning text-primary me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{% url 'trips:trip_create' %}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-plus-circle mb-2" style="font-size: 2rem;"></i>
+                            <span>Create Trip</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-truck mb-2" style="font-size: 2rem;"></i>
+                            <span>Add Vehicle</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{% url 'drivers:driver_create' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-person-plus mb-2" style="font-size: 2rem;"></i>
+                            <span>Add Driver</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a href="{% url 'maintenance:maintenance_create' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-tools mb-2" style="font-size: 2rem;"></i>
+                            <span>Schedule Maintenance</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Vehicle Status Chart
+const vehicleCtx = document.getElementById('vehicleStatusChart').getContext('2d');
+const vehicleChart = new Chart(vehicleCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Available', 'On Trip', 'In Shop'],
+        datasets: [{
+            data: [{{ available_vehicles|default:0 }}, {{ on_trip_vehicles|default:0 }}, {{ in_shop_vehicles|default:0 }}],
+            backgroundColor: [
+                '#10b981',
+                '#f59e0b',
+                '#ef4444'
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#2563eb',
+                borderWidth: 1,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                        return label + ': ' + value + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        },
+        cutout: '70%'
+    }
+});
+
+// Fuel Consumption Chart - using real historical data
+const fuelCtx = document.getElementById('fuelChart').getContext('2d');
+const fuelChart = new Chart(fuelCtx, {
+    type: 'line',
+    data: {
+        labels: {{ fuel_consumption_labels|safe }},
+        datasets: [{
+            label: 'Fuel Consumption (Liters)',
+            data: {{ fuel_consumption_data|safe }},
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#2563eb',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#2563eb',
+                borderWidth: 1,
+                displayColors: false,
+                callbacks: {
+                    label: function(context) {
+                        return 'Fuel: ' + context.parsed.y + ' liters';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    font: {
+                        family: 'Inter'
+                    }
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    borderDash: [5, 5],
+                    color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                    font: {
+                        family: 'Inter'
+                    },
+                    callback: function(value) {
+                        return value + ' L';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Remove real-time updates simulation since we now have real data
+// The dashboard will show actual data from the database
+</script>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ driver.full_name }} - Driver Details - FleetFlow{% endblock %}
+
+{% block page_title %}Driver Details{% endblock %}
+
+
+{% block content %}
+<!-- Profile Section -->
+<div class="row mb-4">
+    <div class="col-lg-4">
+        <div class="card shadow h-100">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Driver Profile</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if driver.profile_picture %}
+                    <img src="{{ driver.profile_picture.url }}" alt="{{ driver.full_name }}" class="rounded-circle mb-3" width="120" height="120">
+                {% else %}
+                    <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                        <i class="bi bi-person text-white" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                <h5 class="mb-1">{{ driver.full_name }}</h5>
+                <p class="text-muted mb-2">{{ driver.employee_id }}</p>
+                <div class="mb-2">
+                    {% if driver.status == 'on_duty' %}
+                        <span class="badge bg-success status-badge">{{ driver.get_status_display }}</span>
+                    {% elif driver.status == 'off_duty' %}
+                        <span class="badge bg-secondary status-badge">{{ driver.get_status_display }}</span>
+                    {% elif driver.status == 'suspended' %}
+                        <span class="badge bg-warning status-badge">{{ driver.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-info status-badge">{{ driver.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-start">
+                    <div class="mb-2">
+                        <strong class="text-muted">Email:</strong><br>
+                        <small>{{ driver.email }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-muted">Phone:</strong><br>
+                        <small>{{ driver.phone }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-muted">Address:</strong><br>
+                        <small>{{ driver.address }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-muted">Hire Date:</strong><br>
+                        <small>{{ driver.hire_date|date:"Y-m-d" }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-muted">Date of Birth:</strong><br>
+                        <small>{{ driver.date_of_birth|date:"Y-m-d" }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-muted">Salary:</strong><br>
+                        <small class="text-success">${{ driver.salary|default:0 }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Information -->
+    <div class="col-lg-4">
+        <div class="card shadow h-100">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">License Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td class="text-muted" width="40%">License Number:</td>
+                        <td><strong>{{ driver.license_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">License Type:</td>
+                        <td><strong>{{ driver.license_type }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">License Expiry:</td>
+                        <td>
+                            <strong>{{ driver.license_expiry|date:"Y-m-d" }}</strong>
+                            {% if driver.license_expired %}
+                                <span class="badge bg-danger ms-1">EXPIRED</span>
+                            {% elif driver.license_expires_soon %}
+                                {% load tz %}
+                                {% now "Y-m-d" as today %}
+                                {% with days=driver.license_expiry|timeuntil:today %}
+                                    {% if days.days > 0 %}
+                                        <span class="badge bg-warning ms-1">EXPIRES IN {{ days.days }} DAYS</span>
+                                    {% else %}
+                                        <span class="badge bg-success ms-1">EXPIRED</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="badge bg-success ms-1">VALID</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="col-lg-4">
+        <div class="card shadow h-100">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Performance Metrics</h6>
+            </div>
+            <div class="card-body">
+                {% if performance %}
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted" width="40%">Total Trips:</td>
+                            <td><strong>{{ performance.total_trips }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Completed:</td>
+                            <td><strong>{{ performance.completed_trips }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Completion Rate:</td>
+                            <td><strong class="text-success">{{ performance.completion_rate|floatformat:2 }}%</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Total Distance:</td>
+                            <td><strong>{{ performance.total_distance|floatformat:2 }} km</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Fuel Efficiency:</td>
+                            <td><strong>{{ performance.fuel_efficiency|floatformat:2 }} km/L</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Safety Score:</td>
+                            <td>
+                                <span class="badge bg-primary">{{ performance.safety_score|floatformat:1 }}/100</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Bonus Earned:</td>
+                            <td><strong class="text-success">${{ performance.bonus_earned|default:0 }}</strong></td>
+                        </tr>
+                    </table>
+                {% else %}
+                    <p class="text-muted text-center">No performance data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Contact -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Emergency Contact</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong class="text-muted">Contact Name:</strong>
+                        <p class="mb-0">{{ driver.emergency_contact }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong class="text-muted">Emergency Phone:</strong>
+                        <p class="mb-0">{{ driver.emergency_phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Documents</h6>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Document Type</th>
+                                    <th>Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-info">{{ document.get_document_type_display }}</span>
+                                        </td>
+                                        <td>{{ document.title }}</td>
+                                        <td>{{ document.issue_date|date:"Y-m-d" }}</td>
+                                        <td>
+                                            {{ document.expiry_date|date:"Y-m-d" }}
+                                            {% if document.is_expired %}
+                                                <span class="badge bg-danger">EXPIRED</span>
+                                            {% elif document.expires_soon %}
+                                                <span class="badge bg-warning">EXPIRES SOON</span>
+                                            {% else %}
+                                                <span class="badge bg-success">VALID</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                <i class="bi bi-download"></i> Download
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No documents uploaded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Attendance -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Recent Attendance</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_attendance %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                    <th>Hours Worked</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in recent_attendance %}
+                                    <tr>
+                                        <td>{{ attendance.date|date:"Y-m-d" }}</td>
+                                        <td>{{ attendance.check_in|time:"H:i" }}</td>
+                                        <td>{{ attendance.check_out|time:"H:i" }}</td>
+                                        <td>{{ attendance.hours_worked }}</td>
+                                        <td>
+                                            {% if attendance.status == 'present' %}
+                                                <span class="badge bg-success">{{ attendance.get_status_display }}</span>
+                                            {% elif attendance.status == 'absent' %}
+                                                <span class="badge bg-danger">{{ attendance.get_status_display }}</span>
+                                            {% elif attendance.status == 'late' %}
+                                                <span class="badge bg-warning">{{ attendance.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ attendance.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No attendance records found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="text-center">
+            <a href="{% url 'drivers:driver_performance' driver.pk %}" class="btn btn-info">
+                <i class="bi bi-graph-up"></i> View Full Performance Report
+            </a>
+            <a href="{% url 'drivers:driver_attendance' driver.pk %}" class="btn btn-success">
+                <i class="bi bi-calendar-check"></i> Manage Attendance
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

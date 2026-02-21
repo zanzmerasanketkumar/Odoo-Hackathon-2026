@@ -1,0 +1,211 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Complete Maintenance - {{ maintenance.title }} - FleetFlow{% endblock %}
+
+{% block page_title %}Complete Maintenance{% endblock %}
+
+{% block page_subtitle %}{{ maintenance.title }} - {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-tools text-warning me-2"></i>
+                    Complete Maintenance
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Maintenance Summary -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Maintenance Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Vehicle:</strong> {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }} ({{ maintenance.vehicle.license_plate }})
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Type:</strong> {{ maintenance.maintenance_type.name }}
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <strong>Scheduled Date:</strong> {{ maintenance.scheduled_date|date:"Y-m-d" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Priority:</strong> 
+                                <span class="badge bg-{% if maintenance.priority == 'urgent' %}danger{% elif maintenance.priority == 'high' %}warning{% elif maintenance.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                    {{ maintenance.get_priority_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Completion Form -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="actual_duration" class="form-label">Actual Duration (hours)</label>
+                            <input type="number" step="0.5" name="actual_duration" id="actual_duration" 
+                                   class="form-control" placeholder="Enter actual time taken" required>
+                            <small class="text-muted">How long did the maintenance actually take?</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="actual_cost" class="form-label">Actual Cost ($)</label>
+                            <input type="number" step="0.01" name="actual_cost" id="actual_cost" 
+                                   class="form-control" placeholder="Enter actual cost" required>
+                            <small class="text-muted">Total cost of parts and labor</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="completion_notes" class="form-label">Completion Notes</label>
+                        <textarea name="completion_notes" id="completion_notes" rows="4" 
+                                  class="form-control" placeholder="Describe what was done, any issues found, parts replaced, etc."></textarea>
+                        <small class="text-muted">Detailed notes about the maintenance work performed</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'maintenance:maintenance_detail' maintenance.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Details
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-danger me-2" onclick="confirmCancel()">
+                                <i class="bi bi-x-circle me-1"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i> Complete Maintenance
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Vehicle Information -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-truck text-primary me-2"></i>
+                    Vehicle Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Make/Model:</strong><br>
+                    {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }}
+                </div>
+                <div class="mb-3">
+                    <strong>License Plate:</strong><br>
+                    {{ maintenance.vehicle.license_plate }}
+                </div>
+                <div class="mb-3">
+                    <strong>Current Status:</strong><br>
+                    <span class="badge bg-{% if maintenance.vehicle.status == 'available' %}success{% elif maintenance.vehicle.status == 'on_trip' %}primary{% elif maintenance.vehicle.status == 'in_shop' %}warning{% else %}secondary{% endif %}">
+                        {{ maintenance.vehicle.get_status_display }}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Odometer:</strong><br>
+                    {{ maintenance.vehicle.odometer }} km
+                </div>
+                <div class="mb-3">
+                    <strong>Last Maintenance:</strong><br>
+                    {% if maintenance.vehicle.last_maintenance_date %}
+                        {{ maintenance.vehicle.last_maintenance_date|date:"Y-m-d" }}
+                    {% else %}
+                        No previous maintenance
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Completion Checklist -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-check2-square text-success me-2"></i>
+                    Completion Checklist
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="check1">
+                    <label class="form-check-label" for="check1">
+                        All work completed successfully
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="check2">
+                    <label class="form-check-label" for="check2">
+                        Vehicle tested and working properly
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="check3">
+                    <label class="form-check-label" for="check3">
+                        All costs documented accurately
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="check4">
+                    <label class="form-check-label" for="check4">
+                        Work area cleaned and organized
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check5">
+                    <label class="form-check-label" for="check5">
+                        Paperwork completed and filed
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-check-input:checked {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+</style>
+
+<script>
+function confirmCancel() {
+    if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+        window.location.href = '{% url "maintenance:maintenance_detail" maintenance.pk %}';
+    }
+}
+</script>
+{% endblock %}

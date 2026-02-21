@@ -1,0 +1,323 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Maintenance Parts - {{ maintenance.title }} - FleetFlow{% endblock %}
+
+{% block page_title %}Maintenance Parts{% endblock %}
+
+{% block page_subtitle %}{{ maintenance.title }} - {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Add Part Form -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-plus-circle text-success me-2"></i>
+                    Add New Part
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.part_name.id_for_label }}" class="form-label">Part Name</label>
+                            {{ form.part_name }}
+                            {% if form.part_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.part_name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.part_number.id_for_label }}" class="form-label">Part Number</label>
+                            {{ form.part_number }}
+                            {% if form.part_number.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.part_number.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.quantity.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.unit_cost.id_for_label }}" class="form-label">Unit Cost ($)</label>
+                            {{ form.unit_cost }}
+                            {% if form.unit_cost.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.unit_cost.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.supplier.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.notes.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i> Add Part
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Parts List -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-list-ul text-primary me-2"></i>
+                    Parts Used ({{ parts.count }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if parts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Part Name</th>
+                                    <th>Part Number</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Cost</th>
+                                    <th>Total Cost</th>
+                                    <th>Supplier</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for part in parts %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ part.part_name }}</strong>
+                                        {% if part.notes %}
+                                            <br><small class="text-muted">{{ part.notes|truncatewords:10 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ part.part_number|default:"N/A" }}</span>
+                                    </td>
+                                    <td>{{ part.quantity }}</td>
+                                    <td>${{ part.unit_cost|floatformat:2 }}</td>
+                                    <td>
+                                        <strong>${{ part.total_cost|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>{{ part.supplier|default:"N/A" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="4">Total Parts Cost:</th>
+                                    <th colspan="3">
+                                        <strong class="text-success">${{ total_parts_cost|floatformat:2 }}</strong>
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-box text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">No Parts Added Yet</h5>
+                        <p class="text-muted">Start by adding parts used in this maintenance.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Maintenance Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-info-circle text-info me-2"></i>
+                    Maintenance Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Title:</strong><br>
+                    {{ maintenance.title }}
+                </div>
+                <div class="mb-3">
+                    <strong>Vehicle:</strong><br>
+                    {{ maintenance.vehicle.make }} {{ maintenance.vehicle.model }} ({{ maintenance.vehicle.license_plate }})
+                </div>
+                <div class="mb-3">
+                    <strong>Type:</strong><br>
+                    <span class="badge bg-info">{{ maintenance.maintenance_type.name }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    <span class="badge bg-{% if maintenance.status == 'completed' %}success{% elif maintenance.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                        {{ maintenance.get_status_display }}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Scheduled Date:</strong><br>
+                    {{ maintenance.scheduled_date|date:"Y-m-d" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Priority:</strong><br>
+                    <span class="badge bg-{% if maintenance.priority == 'urgent' %}danger{% elif maintenance.priority == 'high' %}warning{% elif maintenance.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                        {{ maintenance.get_priority_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-calculator text-warning me-2"></i>
+                    Cost Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Parts Cost:</span>
+                        <strong>${{ total_parts_cost|floatformat:2 }}</strong>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Estimated Labor:</span>
+                        <strong>${{ maintenance.estimated_cost|floatformat:2 }}</strong>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-success">Total Estimated:</span>
+                        <strong class="text-success">${{ total_estimated_cost|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-lightning text-primary me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'maintenance:maintenance_detail' maintenance.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Details
+                    </a>
+                    <a href="{% url 'maintenance:maintenance_complete' maintenance.pk %}" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i> Complete Maintenance
+                    </a>
+                    <a href="{% url 'maintenance:maintenance_documents' maintenance.pk %}" class="btn btn-outline-info">
+                        <i class="bi bi-file-text me-1"></i> Manage Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #374151;
+}
+
+.btn-group .btn {
+    border-radius: 4px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+</style>
+
+<script>
+// Calculate totals dynamically
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('input[name="quantity"]');
+    const unitCostInputs = document.querySelectorAll('input[name="unit_cost"]');
+    
+    function calculateTotal() {
+        // This would be used for real-time calculations if needed
+    }
+    
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', calculateTotal);
+    });
+    
+    unitCostInputs.forEach(input => {
+        input.addEventListener('input', calculateTotal);
+    });
+});
+</script>
+{% endblock %}

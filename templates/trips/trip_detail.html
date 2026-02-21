@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Trip {{ trip.trip_number }} - FleetFlow{% endblock %}
+
+{% block page_title %}Trip Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Trip Information -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Trip Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Trip Number:</strong> {{ trip.trip_number }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        {% if trip.status == 'draft' %}
+                            <span class="badge bg-secondary">{{ trip.get_status_display }}</span>
+                        {% elif trip.status == 'dispatched' %}
+                            <span class="badge bg-warning">{{ trip.get_status_display }}</span>
+                        {% elif trip.status == 'in_progress' %}
+                            <span class="badge bg-info">{{ trip.get_status_display }}</span>
+                        {% elif trip.status == 'completed' %}
+                            <span class="badge bg-success">{{ trip.get_status_display }}</span>
+                        {% elif trip.status == 'cancelled' %}
+                            <span class="badge bg-danger">{{ trip.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ trip.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Origin:</strong> {{ trip.origin }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Destination:</strong> {{ trip.destination }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Driver:</strong> {{ trip.driver.full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Vehicle:</strong> {{ trip.vehicle.name }} ({{ trip.vehicle.license_plate }})
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Cargo Weight:</strong> {{ trip.cargo_weight }} kg
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Priority:</strong> {{ trip.get_priority_display }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Start Date:</strong> {{ trip.start_date|date:"Y-m-d H:i" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>End Date:</strong> {{ trip.end_date|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+                {% if trip.cargo_description %}
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Cargo Description:</strong> {{ trip.cargo_description }}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if trip.notes %}
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Notes:</strong> {{ trip.notes }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Statistics -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Trip Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Estimated Distance:</strong> {{ trip.estimated_distance }} km
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Estimated Duration:</strong> {{ trip.estimated_duration }} hours
+                    </div>
+                </div>
+                {% if trip.actual_distance %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Actual Distance:</strong> {{ trip.actual_distance }} km
+                        </div>
+                    </div>
+                {% endif %}
+                {% if trip.actual_duration %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Actual Duration:</strong> {{ trip.actual_duration }} hours
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Created:</strong> {{ trip.created_at|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Last Updated:</strong> {{ trip.updated_at|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <!-- Status-based Action Buttons -->
+        {% if trip.status == 'draft' %}
+        <div class="d-flex gap-2 justify-content-center mb-3">
+            <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Trip
+            </a>
+            <a href="{% url 'trips:trip_dispatch' trip.pk %}" class="btn btn-warning">
+                <i class="bi bi-send"></i> Dispatch Trip
+            </a>
+        </div>
+        {% elif trip.status == 'dispatched' %}
+        <div class="d-flex gap-2 justify-content-center mb-3">
+            <a href="{% url 'trips:trip_start' trip.pk %}" class="btn btn-success">
+                <i class="bi bi-play-circle"></i> Start Trip
+            </a>
+            <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Trip
+            </a>
+        </div>
+        {% elif trip.status == 'in_progress' %}
+        <!-- Complete Trip Form -->
+        <div class="card shadow mb-3">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    Complete Trip
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'trips:trip_complete' trip.pk %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="actual_distance" class="form-label">Actual Distance (km)</label>
+                            <input type="number" step="0.01" name="actual_distance" id="actual_distance" 
+                                   class="form-control" placeholder="{{ trip.estimated_distance }}" 
+                                   value="{{ trip.actual_distance|default:'' }}">
+                            <small class="text-muted">Enter the actual distance traveled</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="actual_duration" class="form-label">Actual Duration (hours)</label>
+                            <input type="number" name="actual_duration" id="actual_duration" 
+                                   class="form-control" placeholder="{{ trip.estimated_duration }}" 
+                                   value="{{ trip.actual_duration|default:'' }}">
+                            <small class="text-muted">Enter the actual trip duration</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Complete Trip
+                        </button>
+                        <a href="{% url 'trips:trip_detail' trip.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            After completion, you will be redirected to the trips list.
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% elif trip.status == 'completed' %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Trip Completed!</strong> This trip was successfully completed on {{ trip.actual_end_time|date:"Y-m-d H:i" }}.
+        </div>
+        {% elif trip.status == 'cancelled' %}
+        <div class="alert alert-danger">
+            <i class="bi bi-x-circle-fill me-2"></i>
+            <strong>Trip Cancelled</strong> This trip was cancelled.
+        </div>
+        {% endif %}
+        
+        <!-- Management Buttons -->
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="{% url 'trips:trip_expenses' trip.pk %}" class="btn btn-info">
+                <i class="bi bi-currency-dollar"></i> Manage Expenses
+            </a>
+            <a href="{% url 'trips:trip_checkpoints' trip.pk %}" class="btn btn-warning">
+                <i class="bi bi-geo-alt"></i> Manage Checkpoints
+            </a>
+            <a href="{% url 'trips:trip_documents' trip.pk %}" class="btn btn-success">
+                <i class="bi bi-file-text"></i> Manage Documents
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

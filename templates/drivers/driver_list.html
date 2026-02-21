@@ -1,0 +1,272 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Drivers - FleetFlow{% endblock %}
+
+{% block page_title %}Drivers{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Filters</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search drivers..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_label in status_choices %}
+                        <option value="{{ status_value }}" {% if request.GET.status == status_value %}selected{% endif %}>{{ status_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="license_filter" class="form-select">
+                    <option value="">All Licenses</option>
+                    <option value="expired" {% if request.GET.license_filter == 'expired' %}selected{% endif %}>Expired Licenses</option>
+                    <option value="expiring_soon" {% if request.GET.license_filter == 'expiring_soon' %}selected{% endif %}>Expiring Soon (30 days)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Drivers Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Drivers ({{ drivers|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if drivers %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>License Number</th>
+                            <th>License Type</th>
+                            <th>Status</th>
+                            <th>License Expiry</th>
+                            <th>Safety Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for driver in drivers %}
+                            <tr>
+                                <td>
+                                    {% if driver.profile_picture %}
+                                        <img src="{{ driver.profile_picture.url }}" alt="{{ driver.full_name }}" 
+                                             class="rounded-circle border" width="40" height="40">
+                                    {% else %}
+                                        <div class="rounded-circle bg-light border d-inline-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person text-muted" style="font-size: 1rem;"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ driver.full_name }}</strong>
+                                    {% if driver.license_expired %}
+                                        <span class="badge bg-danger ms-1">License Expired</span>
+                                    {% elif driver.license_expires_soon %}
+                                        <span class="badge bg-warning ms-1">Expires Soon</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ driver.email }}</td>
+                                <td>{{ driver.phone }}</td>
+                                <td>{{ driver.license_number }}</td>
+                                <td>{{ driver.license_type }}</td>
+                                <td>
+                                    {% if driver.status == 'on_duty' %}
+                                        <span class="badge bg-success status-badge">{{ driver.get_status_display }}</span>
+                                    {% elif driver.status == 'off_duty' %}
+                                        <span class="badge bg-secondary status-badge">{{ driver.get_status_display }}</span>
+                                    {% elif driver.status == 'suspended' %}
+                                        <span class="badge bg-warning status-badge">{{ driver.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info status-badge">{{ driver.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ driver.license_expiry|date:"Y-m-d" }}
+                                    {% if driver.license_expired %}
+                                        <span class="text-danger"> (Expired)</span>
+                                    {% elif driver.license_expires_soon %}
+                                        {% load tz %}
+                                        {% if driver.license_expiry %}
+                                            {% now "Y-m-d" as today %}
+                                            {% with days=driver.license_expiry|timeuntil:today %}
+                                                {% if days.days > 0 %}
+                                                    <span class="text-warning"> ({{ days.days }} days)</span>
+                                                {% else %}
+                                                    <span class="text-success"> (Expired)</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if driver.performance %}
+                                        <span class="badge bg-primary">{{ driver.performance.safety_score|floatformat:1 }}/100</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'drivers:driver_detail' driver.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'drivers:driver_edit' driver.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'drivers:driver_performance' driver.pk %}" class="btn btn-sm btn-outline-info" title="Performance">
+                                            <i class="bi bi-graph-up"></i>
+                                        </a>
+                                        <a href="{% url 'drivers:driver_documents' driver.pk %}" class="btn btn-sm btn-outline-warning" title="Documents">
+                                            <i class="bi bi-file-text"></i>
+                                        </a>
+                                        <a href="{% url 'drivers:driver_attendance' driver.pk %}" class="btn btn-sm btn-outline-success" title="Attendance">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-person-badge fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No drivers found</h5>
+                <p class="text-muted">Get started by adding your first driver.</p>
+                <a href="{% url 'drivers:driver_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Driver
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Drivers
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ drivers|length }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Available Drivers
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ available_drivers|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Expired Licenses
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ expired_licenses|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Expiring Soon
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ expiring_soon|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-clock-history fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+    <nav aria-label="Drivers pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

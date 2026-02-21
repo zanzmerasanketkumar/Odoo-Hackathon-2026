@@ -1,0 +1,285 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ driver.full_name }} - Performance Report - FleetFlow{% endblock %}
+
+{% block page_title %}Driver Performance Report{% endblock %}
+
+
+{% block content %}
+<div class="row">
+    <!-- Performance Overview -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Performance Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Total Trips
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ performance.total_trips }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-route fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Completed
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ performance.completed_trips }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Completion Rate
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ performance.completion_rate|floatformat:2 }}%
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-percent fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Cancelled
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ performance.cancelled_trips }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Performance Metrics</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Distance Traveled</th>
+                            <th>Fuel Consumed</th>
+                            <th>Fuel Efficiency</th>
+                            <th>Safety Score</th>
+                            <th>Bonus Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ performance.total_distance|floatformat:2 }} km</td>
+                            <td>{{ performance.total_fuel_consumed|floatformat:2 }} L</td>
+                            <td>{{ performance.fuel_efficiency|floatformat:2 }} km/L</td>
+                            <td>
+                                <span class="badge bg-primary">{{ performance.safety_score|floatformat:1 }}/100</span>
+                            </td>
+                            <td>${{ performance.bonus_earned|default:0 }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m6 m-0 font-weight-bold">Trip Completion Trend</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="tripTrendChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-6 m-0 font-weight-bold">Fuel Efficiency Trend</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="fuelEfficiencyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'drivers:driver_edit' driver.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit Driver
+                    </a>
+                    <a href="{% url 'drivers:driver_documents' driver.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-file-text"></i> Manage Documents
+                    </a>
+                    <a href="{% url 'drivers:driver_attendance' driver.pk %}" class="btn btn-outline-success">
+                        <i class="bi bi-calendar-check"></i> Manage Attendance
+                    </a>
+                    <a href="{% url 'drivers:driver_list' %}" class="btn btn-outline-info">
+                        <i class="bi bi-list"></i> All Drivers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">Export Options</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-primary" onclick="exportPerformanceReport()">
+                            <i class="bi bi-download"></i> Export PDF
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-success" onclick="exportExcelReport()">
+                            <i class="bi bi-file-earmark-excel"></i> Export Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Performance Charts
+const tripTrendCtx = document.getElementById('tripTrendChart').getContext('2d');
+const fuelEfficiencyCtx = document.getElementById('fuelEfficiencyChart').getContext('2d');
+
+// Trip Completion Trend Chart
+new Chart(tripTrendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Completed Trips',
+            data: [12, 19, 25, 22, 28],
+            borderColor: 'rgb(75, 192, 192, 192, 75)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }, {
+            label: 'Cancelled Trips',
+            data: [2, 3, 1, 1],
+            borderColor: 'rgb(255, 99, 132, 132, 255)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Fuel Efficiency Chart
+new Chart(fuelEfficiencyCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Fuel Efficiency (km/L)',
+            data: [8.5, 8.2, 8.8, 9.1],
+            borderColor: 'rgb(54, 162, 235, 162, 54)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Export Functions
+function exportPerformanceReport() {
+    // This would generate and download a PDF report
+    alert('PDF export functionality would be implemented here');
+}
+
+function exportExcelReport() {
+    // This would generate and download an Excel report
+    alert('Excel export functionality would be implemented here');
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    tripTrendChart.update();
+    fuelEfficiencyChart.update();
+});
+</script>
+{% endblock %}

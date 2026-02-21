@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Fuel Logs - FleetFlow{% endblock %}
+
+{% block page_title %}Fuel Management{% endblock %}
+
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Filters</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search fuel logs..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="vehicle" class="form-select">
+                    <option value="">All Vehicles</option>
+                    {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.id }}" {% if request.GET.vehicle == vehicle.id|stringformat:"s" %}selected{% endif %}>{{ vehicle.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="start_date" class="form-control" placeholder="Start Date" value="{{ request.GET.start_date }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="end_date" class="form-control" placeholder="End Date" value="{{ request.GET.end_date }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Fuel Logs Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Fuel Logs ({{ fuel_logs|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if fuel_logs %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Fuel Date</th>
+                            <th>Fuel Type</th>
+                            <th>Liters</th>
+                            <th>Cost/Liter</th>
+                            <th>Total Cost</th>
+                            <th>Fuel Efficiency</th>
+                            <th>Station</th>
+                            <th>Driver</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fuel_log in fuel_logs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ fuel_log.vehicle.name }}</strong>
+                                    ({{ fuel_log.vehicle.license_plate }})
+                                </td>
+                                <td>{{ fuel_log.fuel_date|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ fuel_log.get_fuel_type_display }}</span>
+                                </td>
+                                <td>{{ fuel_log.fuel_liters }}L</td>
+                                <td>${{ fuel_log.cost_per_liter }}</td>
+                                <td><strong>${{ fuel_log.total_cost }}</strong></td>
+                                <td>
+                                    {% if fuel_log.fuel_efficiency %}
+                                        {{ fuel_log.fuel_efficiency|floatformat:2 }} km/L
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ fuel_log.fuel_station.name|default:"-" }}</td>
+                                <td>{{ fuel_log.driver.full_name|default:"-" }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="#" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if fuel_log.receipt %}
+                                            <a href="{{ fuel_log.receipt.url }}" class="btn btn-sm btn-outline-info" title="View Receipt" target="_blank">
+                                                <i class="bi bi-file-text"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-fuel-pump fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No fuel logs found</h5>
+                <p class="text-muted">Get started by adding your first fuel log.</p>
+                <a href="{% url 'fuel:fuel_log_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Fuel Log
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Fuel Logs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ fuel_logs|length }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-fuel-pump fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Fuel Consumed
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% widthratio fuel_logs|length 1 0 %}L
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-droplet fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Cost
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ${{ total_fuel_cost|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Avg Efficiency
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% widthratio fuel_logs|length 1 0 %} km/L
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+    <nav aria-label="Fuel logs pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

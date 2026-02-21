@@ -1,0 +1,212 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Edit Profile - FleetFlow{% endblock %}
+
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-pencil me-2"></i>
+                    Edit Profile
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Profile Picture -->
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <label for="{{ form.avatar.id_for_label }}" class="form-label">Profile Picture</label>
+                            {% if profile.avatar %}
+                                <div class="mb-3">
+                                    <img src="{{ profile.avatar.url }}" alt="Current Avatar" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                                    <br>
+                                    <small class="text-muted">Current profile picture</small>
+                                </div>
+                            {% else %}
+                                <div class="mb-3">
+                                    <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                                    </div>
+                                    <br>
+                                    <small class="text-muted">No profile picture set</small>
+                                </div>
+                            {% endif %}
+                            {{ form.avatar }}
+                            {% if form.avatar.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.avatar.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-2">Upload a new profile picture (JPG, PNG, GIF - Max 5MB)</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="mb-3">Personal Information</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                            {{ form.date_of_birth }}
+                            {% if form.date_of_birth.errors %}
+                                <div class="text-danger small">
+                                    {{ form.date_of_birth.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                            {{ form.bio }}
+                            {% if form.bio.errors %}
+                                <div class="text-danger small">
+                                    {{ form.bio.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Tell us about yourself</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="mb-3">Contact Information</h6>
+                        </div>
+                        <div class="col-12">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small">
+                                    {{ form.address.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Emergency Contact -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="mb-3">Emergency Contact</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.emergency_contact.id_for_label }}" class="form-label">Emergency Contact Name</label>
+                            {{ form.emergency_contact }}
+                            {% if form.emergency_contact.errors %}
+                                <div class="text-danger small">
+                                    {{ form.emergency_contact.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.emergency_phone.id_for_label }}" class="form-label">Emergency Contact Phone</label>
+                            {{ form.emergency_phone }}
+                            {% if form.emergency_phone.errors %}
+                                <div class="text-danger small">
+                                    {{ form.emergency_phone.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information (Read-only) -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="mb-3">Account Information</h6>
+                            <div class="bg-light p-3 rounded">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-2"><strong>Username:</strong> {{ user.username }}</p>
+                                        <p class="mb-2"><strong>Email:</strong> {{ user.email }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-2"><strong>Role:</strong> {{ user.get_role_display }}</p>
+                                        <p class="mb-2"><strong>Phone:</strong> {{ user.phone|default:"Not set" }}</p>
+                                    </div>
+                                </div>
+                                <small class="text-muted">To change account information, contact your administrator</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Profile
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-secondary me-2">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle"></i> Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Additional Actions -->
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-gear me-2"></i>
+                    Account Settings
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-key me-2"></i> Change Password
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-person me-2"></i> View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form classes to all form fields
+    const formFields = document.querySelectorAll('input:not([type="file"]), textarea, select');
+    formFields.forEach(field => {
+        if (!field.classList.contains('form-control')) {
+            field.classList.add('form-control');
+        }
+    });
+    
+    // Add file input styling
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.classList.add('form-control');
+        
+        // Show file name when selected
+        fileInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'No file selected';
+            const label = this.previousElementSibling;
+            if (label && label.tagName === 'LABEL') {
+                const existingText = label.textContent.split('(')[0];
+                label.textContent = existingText + `(${fileName})`;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

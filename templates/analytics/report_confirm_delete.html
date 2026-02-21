@@ -1,0 +1,71 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Delete Report - FleetFlow{% endblock %}
+
+{% block page_title %}Delete Report{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirm Report Deletion
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> You are about to delete a report. This action cannot be undone.
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Report Details:</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Title:</strong></td>
+                                <td>{{ object.title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td>{{ object.get_report_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Period:</strong></td>
+                                <td>{{ object.get_period_display }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date Range:</strong></td>
+                                <td>{{ object.start_date|date:"M d, Y" }} - {{ object.end_date|date:"M d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if object.is_generated %}
+                                        <span class="badge bg-success">Generated</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'analytics:reports' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

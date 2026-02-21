@@ -1,0 +1,181 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Report{% else %}Generate Report{% endif %} - FleetFlow{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Edit Report{% else %}Generate Report{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                    {% if form.instance.pk %}Edit Report{% else %}Generate New Report{% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.report_type.id_for_label }}" class="form-label">Report Type *</label>
+                            {{ form.report_type }}
+                            {% if form.report_type.errors %}
+                                <div class="text-danger small">
+                                    {{ form.report_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.period.id_for_label }}" class="form-label">Period *</label>
+                            {{ form.period }}
+                            {% if form.period.errors %}
+                                <div class="text-danger small">
+                                    {{ form.period.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Report Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date *</label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                                <div class="text-danger small">
+                                    {{ form.start_date.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date *</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="text-danger small">
+                                    {{ form.end_date.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Output Format -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.file_format.id_for_label }}" class="form-label">Output Format</label>
+                            {{ form.file_format }}
+                            {% if form.file_format.errors %}
+                                <div class="text-danger small">
+                                    {{ form.file_format.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'analytics:reports' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Reports
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-secondary me-2">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle"></i> {% if form.instance.pk %}Update Report{% else %}Generate Report{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-populate date fields based on period selection
+    const periodSelect = document.getElementById('{{ form.period.id_for_label }}');
+    const startDateField = document.getElementById('{{ form.start_date.id_for_label }}');
+    const endDateField = document.getElementById('{{ form.end_date.id_for_label }}');
+    
+    if (periodSelect && startDateField && endDateField) {
+        periodSelect.addEventListener('change', function() {
+            const period = this.value;
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+            
+            switch(period) {
+                case 'daily':
+                    startDate = new Date(today);
+                    endDate = new Date(today);
+                    break;
+                case 'weekly':
+                    startDate = new Date(today.setDate(today.getDate() - today.getDay()));
+                    endDate = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+                    break;
+                case 'monthly':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'quarterly':
+                    const quarter = Math.floor(today.getMonth() / 3);
+                    startDate = new Date(today.getFullYear(), quarter * 3, 1);
+                    endDate = new Date(today.getFullYear(), quarter * 3 + 3, 0);
+                    break;
+                case 'yearly':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                case 'custom':
+                    // Don't auto-populate for custom period
+                    return;
+            }
+            
+            // Format dates as YYYY-MM-DD
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            startDateField.value = formatDate(startDate);
+            endDateField.value = formatDate(endDate);
+        });
+    }
+});
+</script>
+{% endblock %}

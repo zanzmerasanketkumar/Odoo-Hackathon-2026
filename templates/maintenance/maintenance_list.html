@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Maintenance - FleetFlow{% endblock %}
+
+{% block page_title %}Maintenance Management{% endblock %}
+
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Filters</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search maintenance..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_label in status_choices %}
+                        <option value="{{ status_value }}" {% if request.GET.status == status_value %}selected{% endif %}>{{ status_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    {% for priority_value, priority_label in priority_choices %}
+                        <option value="{{ priority_value }}" {% if request.GET.priority == priority_value %}selected{% endif %}>{{ priority_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Maintenance Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold">Maintenance Schedules ({{ maintenance_schedules|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if maintenance_schedules %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Scheduled Date</th>
+                            <th>Estimated Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for maintenance in maintenance_schedules %}
+                            <tr>
+                                <td>
+                                    <strong>{{ maintenance.vehicle.name }}</strong>
+                                    {% if maintenance.is_overdue %}
+                                        <span class="badge bg-danger ms-1">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ maintenance.title }}</td>
+                                <td>{{ maintenance.maintenance_type.name }}</td>
+                                <td>
+                                    {% if maintenance.status == 'scheduled' %}
+                                        <span class="badge bg-secondary status-badge">{{ maintenance.get_status_display }}</span>
+                                    {% elif maintenance.status == 'in_progress' %}
+                                        <span class="badge bg-primary status-badge">{{ maintenance.get_status_display }}</span>
+                                    {% elif maintenance.status == 'completed' %}
+                                        <span class="badge bg-success status-badge">{{ maintenance.get_status_display }}</span>
+                                    {% elif maintenance.status == 'cancelled' %}
+                                        <span class="badge bg-warning status-badge">{{ maintenance.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info status-badge">{{ maintenance.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if maintenance.priority == 'low' %}
+                                        <span class="badge bg-light text-dark">{{ maintenance.get_priority_display }}</span>
+                                    {% elif maintenance.priority == 'medium' %}
+                                        <span class="badge bg-secondary">{{ maintenance.get_priority_display }}</span>
+                                    {% elif maintenance.priority == 'high' %}
+                                        <span class="badge bg-warning text-dark">{{ maintenance.get_priority_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ maintenance.get_priority_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ maintenance.scheduled_date|date:"Y-m-d H:i" }}</td>
+                                <td>${{ maintenance.estimated_cost|default:0 }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'maintenance:maintenance_detail' maintenance.pk %}" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'maintenance:maintenance_edit' maintenance.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% if maintenance.status == 'scheduled' %}
+                                            <a href="{% url 'maintenance:maintenance_complete' maintenance.pk %}" class="btn btn-sm btn-outline-success" title="Complete">
+                                                <i class="bi bi-check-circle"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'maintenance:maintenance_parts' maintenance.pk %}" class="btn btn-sm btn-outline-info" title="Parts">
+                                            <i class="bi bi-tools"></i>
+                                        </a>
+                                        <a href="{% url 'maintenance:maintenance_documents' maintenance.pk %}" class="btn btn-sm btn-outline-warning" title="Documents">
+                                            <i class="bi bi-file-text"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-tools fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No maintenance schedules found</h5>
+                <p class="text-muted">Get started by scheduling your first maintenance.</p>
+                <a href="{% url 'maintenance:maintenance_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Schedule Maintenance
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
