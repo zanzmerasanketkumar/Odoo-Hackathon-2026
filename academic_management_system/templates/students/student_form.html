@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-user-plus me-2"></i>
+            {{ title }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Student Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Full Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.program.id_for_label }}" class="form-label">Program</label>
+                        {{ form.program }}
+                        {% if form.program.errors %}
+                            <div class="text-danger">
+                                {{ form.program.errors }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            The program will determine the Student ID prefix and email generation.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.semester.id_for_label }}" class="form-label">Current Semester</label>
+                        {{ form.semester }}
+                        {% if form.semester.errors %}
+                            <div class="text-danger">
+                                {{ form.semester.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Auto-Generated Information</h6>
+                        <p class="mb-2">
+                            <strong>Student ID:</strong> Will be generated automatically based on admission year and program
+                        </p>
+                        <p class="mb-0">
+                            <strong>Email ID:</strong> Will be generated as &lt;student_id&gt;.gvp@gujaratvidyapith.org
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Student
+                        </button>
+                        <a href="{% url 'student_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    Program Codes
+                </h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>MCA</td>
+                            <td><code>101</code></td>
+                        </tr>
+                        <tr>
+                            <td>MScIT</td>
+                            <td><code>201</code></td>
+                        </tr>
+                        <tr>
+                            <td>BCA</td>
+                            <td><code>301</code></td>
+                        </tr>
+                        <tr>
+                            <td>PGDCA</td>
+                            <td><code>401</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="alert alert-light">
+                    <small class="text-muted">
+                        <strong>Example:</strong> First MCA student in 2026 gets ID <code>260101</code> and email <code>260101.gvp@gujaratvidyapith.org</code>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

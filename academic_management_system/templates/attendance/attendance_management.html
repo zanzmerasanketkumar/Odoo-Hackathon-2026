@@ -1,0 +1,1046 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Management - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<style>
+.attendance-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+}
+
+.attendance-card {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.attendance-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.attendance-card .card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
+
+/* Enhanced form styling */
+.form-control.attendance-select {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.form-control.attendance-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15), 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.form-control.attendance-select:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-0.5px);
+}
+
+.form-control.attendance-select:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* Custom date input styling */
+.form-control.attendance-select[type="date"] {
+    color: #495057;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.3px;
+}
+
+.form-control.attendance-select[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    opacity: 0;
+}
+
+.form-control.attendance-select[type="date"]::-webkit-inner-spin-button,
+.form-control.attendance-select[type="date"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.form-control.attendance-select[type="date"]::-moz-focus-inner {
+    border: 0;
+}
+
+/* Enhanced date input wrapper */
+.date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.date-input-wrapper::before {
+    content: '\f073';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 16px;
+    color: #0d6efd;
+    pointer-events: none;
+    z-index: 2;
+    font-size: 18px;
+    transition: color 0.3s ease;
+}
+
+.date-input-wrapper:hover::before {
+    color: #0b5ed7;
+}
+
+.date-input-wrapper:focus-within::before {
+    color: #0a58ca;
+}
+
+.date-input-wrapper .form-control.attendance-select {
+    padding-right: 50px;
+    width: 100%;
+}
+
+/* Date input hover and focus effects */
+.date-input-wrapper:hover .form-control.attendance-select {
+    background: #f8f9fa;
+    border-color: #0d6efd;
+}
+
+.date-input-wrapper:focus-within .form-control.attendance-select {
+    background: white;
+    border-color: #0d6efd;
+}
+
+/* Enhanced label styling */
+.form-label.fw-bold {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-label.fw-bold i {
+    margin-right: 10px;
+    color: #0d6efd;
+    font-size: 16px;
+}
+
+/* Form text styling */
+.form-text {
+    color: #6c757d;
+    font-size: 13px;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* Input group styling for better layout */
+.input-group-custom {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.input-group-custom .form-control.attendance-select {
+    border-radius: 12px;
+}
+
+/* Animation for date input */
+@keyframes dateInputFocus {
+    0% {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15), 0 6px 16px rgba(0,0,0,0.15);
+    }
+    100% {
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15), 0 4px 12px rgba(0,0,0,0.15);
+    }
+}
+
+.form-control.attendance-select:focus {
+    animation: dateInputFocus 0.3s ease-out;
+}
+
+.attendance-select.present {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.attendance-select.absent {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.student-row {
+    transition: background-color 0.3s ease;
+}
+
+.student-row:hover {
+    background-color: #f8f9fa;
+}
+
+.student-id {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    padding: 0.3rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
+    border: 1px solid white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.student-row:hover .student-id {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+}
+
+.program-badge {
+    background: linear-gradient(135deg, #6f42c1 0%, #9561e2 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(111, 66, 193, 0.2);
+    border: 1px solid white;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+}
+
+.student-row:hover .program-badge {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+}
+
+/* Program-specific colors */
+.program-badge.MCA {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+}
+
+.program-badge.MScIT {
+    background: linear-gradient(135deg, #6f42c1 0%, #9561e2 100%);
+}
+
+.program-badge.BCA {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+}
+
+.program-badge.PGDCA {
+    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-custom {
+    border-radius: 25px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.summary-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    min-width: 120px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.batch-selector {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.batch-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #2196f3;
+}
+
+.batch-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.batch-btn {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 2px solid #0d6efd;
+}
+
+.batch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.batch-btn.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.student-profile {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-profile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0d6efd 0%, #0dcaf0 100%);
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
+    border: 2px solid white;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-info {
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.profile-info h6 {
+    margin: 0;
+    color: #212529;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.15rem;
+}
+
+.profile-info small {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.profile-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.profile-stat strong {
+    color: #0d6efd;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.profile-stat small {
+    color: #6c757d;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.attendance-checkbox:checked + .form-check-label {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.attendance-checkbox:not(:checked) + .form-check-label {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.form-check {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.form-check.present {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 1px solid #28a745;
+}
+
+.form-check.absent {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #dc3545;
+}
+
+.form-check-input:checked + .form-check-label i {
+    color: #28a745;
+}
+
+.form-check-input:not(:checked) + .form-check-label i {
+    color: #dc3545;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 0.15rem;
+    margin-left: 0.25rem;
+}
+
+.attendance-actions .btn-sm {
+    padding: 0.15rem 0.35rem;
+    font-size: 0.7rem;
+    border-radius: 0.2rem;
+}
+
+.attendance-actions .btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.attendance-actions .btn-outline-primary:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+.attendance-actions .btn-outline-info {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.attendance-actions .btn-outline-info:hover {
+    background: #17a2b8;
+    color: white;
+}
+
+.student-row:hover {
+    background: linear-gradient(135deg, #f8f9ff 0%, #e7f3ff 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.student-row:hover .student-profile {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    border-color: #0d6efd;
+}
+
+.student-row:hover .profile-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(13, 110, 253, 0.4);
+}
+
+.student-row:hover .student-profile::before {
+    background: linear-gradient(90deg, #0d6efd 0%, #0dcaf0 50%, #0d6efd 100%);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+.student-row.selected .student-profile {
+    border-color: #0d6efd;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e7f3ff 100%);
+}
+
+.student-row.selected .student-profile::before {
+    background: linear-gradient(90deg, #0d6efd 0%, #0dcaf0 100%);
+    height: 6px;
+}
+
+.student-row.selected {
+    background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%);
+    border-left: 4px solid #0d6efd;
+}
+
+.attendance-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+}
+
+.attendance-cell .form-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.attendance-cell .form-check-input {
+    margin: 0;
+    transform: scale(1.1);
+}
+
+.attendance-cell .form-check-label {
+    margin-left: 0.25rem;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .attendance-header {
+        padding: 1.5rem 0;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
+
+<!-- Attendance Header -->
+<div class="attendance-header">
+    <div class="text-center">
+        <h1 class="display-5 fw-bold mb-3">
+            <i class="fas fa-chalkboard me-3"></i>
+            Class Attendance Management
+        </h1>
+        <p class="mb-0">Mark daily attendance for students by class efficiently</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="attendance-card">
+                <div class="card-header">
+                    <i class="fas fa-users me-2"></i>Class Attendance Management
+                </div>
+                <div class="card-body">
+                    <form method="post" id="attendanceForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="date" class="form-label fw-bold">
+                                <i class="fas fa-calendar me-2"></i>Select Date
+                            </label>
+                            <div class="date-input-wrapper">
+                                <input type="date" name="date" id="date" class="form-control attendance-select" required>
+                            </div>
+                            <div class="form-text">Select the date for which you want to mark attendance.</div>
+                        </div>
+                        
+                        <!-- Class Selector -->
+                        <div class="batch-selector">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-chalkboard me-2"></i>Select Class
+                            </label>
+                            <div class="d-flex flex-wrap gap-2" id="batchButtons">
+                                <button type="button" class="btn btn-outline-primary class-btn" 
+                                        onclick="showAllStudents()">
+                                    <i class="fas fa-users me-1"></i>
+                                    All Students
+                                </button>
+                                {% for batch_info in batches %}
+                                    <button type="button" class="btn btn-outline-primary class-btn" 
+                                            onclick="showClassStudents('{{ batch_info.code }}', '{{ batch_info.name }}', '{{ batch_info.year }}', '{{ batch_info.program }}')"
+                                            data-year="{{ batch_info.year }}" 
+                                            data-program="{{ batch_info.program }}"
+                                            data-count="{{ batch_info.count }}">
+                                        <i class="fas fa-chalkboard me-1"></i>
+                                        {{ batch_info.name }}
+                                        <span class="badge bg-secondary ms-1">{{ batch_info.count }}</span>
+                                    </button>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">Click on a class to view and mark attendance for students in that class, or select "All Students" to view everyone.</div>
+                        </div>
+                        
+                        {% if students %}
+                            <!-- Class Information -->
+                            <div id="classInfo" class="batch-info" style="display: none;">
+                                <h6 class="mb-2">
+                                    <i class="fas fa-chalkboard me-2"></i>
+                                    <span id="classTitle">Class Information</span>
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Program:</strong> <span id="classProgram">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Year:</strong> <span id="classYear">-</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Students:</strong> <span id="classStudentCount">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Student List (Hidden by default) -->
+                            <div id="studentListContainer" style="display: none;">
+                                <div class="mb-3">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-users me-2"></i>
+                                        Students in <span id="selectedClassName">-</span>
+                                    </h6>
+                                </div>
+                            
+                            <!-- Attendance Summary -->
+                            <div class="summary-stats" id="attendanceSummary">
+                                <div class="stat-item">
+                                    <div class="stat-number text-info" id="totalStudents">{{ students|length }}</div>
+                                    <div class="stat-label">Total Students</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number text-success" id="presentCount">0</div>
+                                    <div class="stat-label">Present</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number text-danger" id="absentCount">0</div>
+                                    <div class="stat-label">Absent</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number text-warning" id="pendingCount">{{ students|length }}</div>
+                                    <div class="stat-label">Pending</div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Student Profile</th>
+                                            <th>Student ID</th>
+                                            <th>Program</th>
+                                            <th>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="me-2">Quick Actions:</span>
+                                                    <button type="button" class="btn btn-sm btn-success me-1" onclick="markAllPresent()">
+                                                        <i class="fas fa-check me-1"></i>All Present
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger me-1" onclick="markAllAbsent()">
+                                                        <i class="fas fa-times me-1"></i>All Absent
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-secondary" onclick="clearAll()">
+                                                        <i class="fas fa-undo me-1"></i>Reset to Present
+                                                    </button>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentTableBody">
+                                        {% for student in students %}
+                                            <tr class="student-row" data-program="{{ student.program }}" data-year="{{ student.admission_year }}" onclick="toggleAttendance('{{ student.pk }}')" style="cursor: pointer;">
+                                                <td>
+                                                    <div class="student-profile">
+                                                        <div class="profile-avatar">
+                                                            {{ student.full_name|first|upper }}
+                                                        </div>
+                                                        <div class="profile-info">
+                                                            <h6>{{ student.full_name }}</h6>
+                                                            <small>{{ student.get_gender_display }} • {{ student.date_of_birth|date:"Y" }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="profile-stats">
+                                                        <div class="profile-stat">
+                                                            <strong>{{ student.phone_number }}</strong>
+                                                            <small>Phone</small>
+                                                        </div>
+                                                        <div class="profile-stat">
+                                                            <strong>{{ student.get_semester_display }}</strong>
+                                                            <small>Semester</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><span class="student-id">{{ student.student_id }}</span></td>
+                                                <td><span class="program-badge {{ student.program }}">{{ student.get_program_display }}</span></td>
+                                                <td onclick="event.stopPropagation()">
+                                                    <div class="attendance-cell">
+                                                        <div class="attendance-checkbox-wrapper">
+                                                            <div class="form-check">
+                                                                <input type="checkbox" 
+                                                                       class="form-check-input attendance-checkbox" 
+                                                                       name="attendance_{{ student.pk }}" 
+                                                                       id="attendance_{{ student.pk }}"
+                                                                       value="present"
+                                                                       {% if existing_attendance.student.pk == True %}checked{% endif %}
+                                                                       onchange="updateAttendanceSummary()">
+                                                                <label class="form-check-label" for="attendance_{{ student.pk }}">
+                                                                    {% if existing_attendance.student.pk == True %}
+                                                                        <i class="fas fa-check-circle text-success"></i> Present
+                                                                    {% else %}
+                                                                        <i class="fas fa-times-circle text-danger"></i> Absent
+                                                                    {% endif %}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="attendance-actions">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editAttendance('{{ student.pk }}', document.getElementById('date').value)" title="Edit Attendance">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewAttendanceHistory('{{ student.pk }}')" title="View History">
+                                                                <i class="fas fa-history"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="action-buttons mt-4">
+                                <button type="button" class="btn btn-outline-primary btn-custom" onclick="markAllPresent()">
+                                    <i class="fas fa-check-double me-2"></i>Mark All Present
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-custom" onclick="markAllAbsent()">
+                                    <i class="fas fa-times me-2"></i>Mark All Absent
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-custom" onclick="clearAll()">
+                                    <i class="fas fa-undo me-2"></i>Reset to Present
+                                </button>
+                                <a href="{% url 'attendance_csv' %}" class="btn btn-outline-success btn-custom">
+                                    <i class="fas fa-download me-2"></i>Export CSV
+                                </a>
+                                <button type="submit" class="btn btn-success btn-custom btn-lg" onclick="return confirmAttendanceSave()">
+                                    <i class="fas fa-save me-2"></i>Save Attendance
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">No Students Found</h4>
+                                <p class="text-muted">Add students to start marking attendance.</p>
+                                <a href="{% url 'student_create' %}" class="btn btn-primary btn-custom">
+                                    <i class="fas fa-user-plus me-2"></i>Add First Student
+                                </a>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateAttendanceSummary() {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    let present = 0;
+    let absent = 0;
+    let pending = 0;
+    
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            present++;
+            checkbox.parentElement.classList.add('present');
+            checkbox.parentElement.classList.remove('absent');
+        } else {
+            absent++;
+            checkbox.parentElement.classList.add('absent');
+            checkbox.parentElement.classList.remove('present');
+        }
+    });
+    
+    document.getElementById('totalStudents').textContent = visibleRows.length;
+    document.getElementById('presentCount').textContent = present;
+    document.getElementById('absentCount').textContent = absent;
+    document.getElementById('pendingCount').textContent = 0;
+}
+
+function markAllPresent() {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateAttendanceSummary();
+}
+
+function markAllAbsent() {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateAttendanceSummary();
+}
+
+function clearAll() {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;  // Default to present
+    });
+    updateAttendanceSummary();
+}
+
+function showAllStudents() {
+    // Update button states
+    const buttons = document.querySelectorAll('.class-btn');
+    buttons.forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    // Set active button
+    event.target.classList.remove('btn-outline-primary');
+    event.target.classList.add('btn-primary', 'active');
+    
+    // Show all students
+    const allRows = document.querySelectorAll('#studentTableBody .student-row');
+    allRows.forEach(row => {
+        row.style.display = '';
+    });
+    
+    // Update class info
+    document.getElementById('classInfo').style.display = 'block';
+    document.getElementById('classTitle').textContent = 'All Students';
+    document.getElementById('classProgram').textContent = 'All Programs';
+    document.getElementById('classYear').textContent = 'All Years';
+    document.getElementById('classStudentCount').textContent = allRows.length;
+    document.getElementById('selectedClassName').textContent = 'All Students';
+    
+    // Show student list container
+    document.getElementById('studentListContainer').style.display = 'block';
+    
+    // Auto-mark all visible students as present
+    setTimeout(() => {
+        const visibleCheckboxes = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"]) .attendance-checkbox');
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateAttendanceSummary();
+    }, 100);
+}
+
+function showClassStudents(batchCode, batchName, year, program) {
+    // Update button states
+    const buttons = document.querySelectorAll('.class-btn');
+    buttons.forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    // Set active button
+    event.target.classList.remove('btn-outline-primary');
+    event.target.classList.add('btn-primary', 'active');
+    
+    const allRows = document.querySelectorAll('#studentTableBody .student-row');
+    let visibleCount = 0;
+    
+    // Filter students by class
+    allRows.forEach(row => {
+        const rowProgram = row.getAttribute('data-program');
+        const rowYear = row.getAttribute('data-year');
+        
+        if (rowProgram === program && rowYear === year) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update class info
+    document.getElementById('classInfo').style.display = 'block';
+    document.getElementById('classTitle').textContent = batchName;
+    document.getElementById('classProgram').textContent = program;
+    document.getElementById('classYear').textContent = year;
+    document.getElementById('classStudentCount').textContent = visibleCount;
+    document.getElementById('selectedClassName').textContent = batchName;
+    
+    // Show student list container
+    document.getElementById('studentListContainer').style.display = 'block';
+    
+    // Auto-mark all visible students as present
+    setTimeout(() => {
+        const visibleCheckboxes = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"]) .attendance-checkbox');
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateAttendanceSummary();
+    }, 100);
+}
+
+// Set today's date as default
+document.getElementById('date').valueAsDate = new Date();
+
+// Initialize summary on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateAttendanceSummary();
+});
+
+// Toggle attendance when clicking on student row
+function toggleAttendance(studentId) {
+    const checkbox = document.getElementById(`attendance_${studentId}`);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        updateAttendanceSummary();
+    }
+}
+
+// Confirmation function for saving attendance
+function confirmAttendanceSave() {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    let presentCount = 0;
+    let absentCount = 0;
+    
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            presentCount++;
+        } else {
+            absentCount++;
+        }
+    });
+    
+    const totalCount = presentCount + absentCount;
+    const message = `Attendance Summary for ${document.getElementById('date').value}:\n\n` +
+                   `✅ Present: ${presentCount} students\n` +
+                   `❌ Absent: ${absentCount} students\n` +
+                   `📊 Total: ${totalCount} students\n\n` +
+                   `Are you sure you want to save this attendance?`;
+    
+    return confirm(message);
+}
+
+// Edit attendance function
+function editAttendance(studentId, date) {
+    const url = `/students/attendance/edit/${studentId}/?date=${date}`;
+    window.location.href = url;
+}
+
+// View attendance history
+function viewAttendanceHistory(studentId) {
+    const url = `/students/attendance/history/${studentId}/`;
+    window.location.href = url;
+}
+
+// Add form validation
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    const visibleRows = document.querySelectorAll('#studentTableBody .student-row:not([style*="display: none"])');
+    const checkboxes = Array.from(visibleRows).map(row => row.querySelector('.attendance-checkbox'));
+    let markedCount = 0;
+    
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked || !checkbox.checked) {
+            markedCount++;
+        }
+    });
+    
+    if (markedCount === 0) {
+        e.preventDefault();
+        alert('Please mark attendance for at least one student before saving.');
+    }
+});
+</script>
+{% endblock %}

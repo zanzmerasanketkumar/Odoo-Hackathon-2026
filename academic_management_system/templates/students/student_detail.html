@@ -1,0 +1,906 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.full_name }} - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<style>
+.student-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="30" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.student-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+.student-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    color: white;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 15px 35px rgba(13, 110, 253, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.student-avatar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: avatar-shine 3s infinite;
+}
+
+@keyframes avatar-shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.student-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.student-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.btn-view:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
+    background: linear-gradient(135deg, #0b5ed7 0%, #0b5ed7 100%);
+}
+
+.btn-report {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-report:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+}
+
+.btn-back {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-back:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+}
+
+.info-card {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: white;
+}
+
+.info-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.info-card .card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.info-card .card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0d6efd, #0dcaf0, #0d6efd);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.info-card .card-body {
+    padding: 2rem;
+}
+
+.section-title {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-table {
+    margin-bottom: 0;
+}
+
+.info-table td {
+    padding: 0.75rem 0;
+    border: none;
+}
+
+.info-table td:first-child {
+    font-weight: 600;
+    color: #495057;
+    width: 40%;
+}
+
+.info-table td:last-child {
+    color: #212529;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e9ecef;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-number {
+    transform: scale(1.05);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+.attendance-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffc107;
+    border-left: 4px solid #ffc107;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+    50% { transform: scale(1.02); box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.2); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+}
+
+.attendance-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.attendance-popup-content {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideUp 0.3s ease;
+    border: 2px solid #ffc107;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.attendance-popup-header {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 15px 15px 0 0;
+    margin: -2rem -2rem 1.5rem -2rem;
+    text-align: center;
+}
+
+.attendance-popup-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.attendance-popup-body {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.attendance-percentage {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.attendance-popup-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-popup-close {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-popup-close:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+}
+
+.btn-popup-action {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-popup-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(220, 53, 69, 0.4);
+}
+
+.attendance-warning h6 {
+    color: #856404;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.performance-badge {
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.performance-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.performance-excellent {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 1px solid #28a745;
+    color: #155724;
+}
+
+.performance-average {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffc107;
+    color: #856404;
+}
+
+.performance-poor {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #dc3545;
+    color: #721c24;
+}
+
+.progress-enhanced {
+    height: 30px;
+    border-radius: 15px;
+    background: #e9ecef;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-enhanced {
+    height: 100%;
+    border-radius: 15px;
+    transition: all 0.5s ease;
+    position: relative;
+}
+
+.progress-bar-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 20px;
+    border: 2px dashed #dee2e6;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+.signature-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e9ecef;
+}
+
+.signature-line {
+    border-bottom: 2px solid #000;
+    width: 200px;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .student-header {
+        padding: 2rem 0;
+    }
+    
+    .student-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+    
+    .student-title {
+        font-size: 2rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-view, .btn-report, .btn-back {
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+    }
+}
+</style>
+
+<!-- Student Header -->
+<div class="student-header">
+    <div class="container text-center">
+        <div class="student-avatar">
+            {{ student.full_name|first|upper }}
+        </div>
+        <h1 class="student-title">{{ student.full_name }}</h1>
+        <p class="student-subtitle">{{ student.get_program_display }} - {{ student.get_semester_display }}</p>
+        <div class="action-buttons">
+            <a href="{% url 'student_report' student.pk %}" class="btn btn-report">
+                <i class="fas fa-file-alt me-2"></i>Generate Report
+            </a>
+            <a href="{% url 'student_list' %}" class="btn btn-back">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="info-card">
+                <div class="card-header text-center">
+                    <i class="fas fa-id-card me-2"></i>Student ID
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="stat-number text-primary">{{ student.student_id }}</div>
+                        <div class="stat-label">Student ID</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="info-card">
+                <div class="card-header text-center">
+                    <i class="fas fa-envelope me-2"></i>Email ID
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="stat-number text-primary" style="font-size: 1.2rem;">{{ student.email_id }}</div>
+                        <div class="stat-label">Institutional Email</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="info-card">
+                <div class="card-header text-center">
+                    <i class="fas fa-percentage me-2"></i>Attendance
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="stat-number {% if attendance_percentage >= 75 %}text-success{% elif attendance_percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ attendance_percentage|floatformat:1 }}%
+                        </div>
+                        <div class="stat-label">Attendance Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="info-card">
+                <div class="card-header text-center">
+                    <i class="fas fa-chart-line me-2"></i>Performance
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="stat-number {% if average_marks >= 75 %}text-success{% elif average_marks >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ average_marks|floatformat:1 }}
+                        </div>
+                        <div class="stat-label">Average Marks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-user me-2"></i>Personal Information
+                </div>
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-id-card me-1"></i>Basic Details
+                    </div>
+                    <table class="table info-table">
+                        <tr>
+                            <td>Full Name</td>
+                            <td>{{ student.full_name|upper }}</td>
+                        </tr>
+                        <tr>
+                            <td>Date of Birth</td>
+                            <td>{{ student.date_of_birth }}</td>
+                        </tr>
+                        <tr>
+                            <td>Gender</td>
+                            <td>{{ student.get_gender_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Blood Group</td>
+                            <td>{{ student.blood_group|default:"Not specified" }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="section-title mt-4">
+                        <i class="fas fa-phone me-1"></i>Contact Information
+                    </div>
+                    <table class="table info-table">
+                        <tr>
+                            <td>Phone</td>
+                            <td>{{ student.phone_number }}</td>
+                        </tr>
+                        <tr>
+                            <td>Personal Email</td>
+                            <td>{{ student.personal_email }}</td>
+                        </tr>
+                        <tr>
+                            <td>Address</td>
+                            <td>{{ student.address }}, {{ student.city }}</td>
+                        </tr>
+                        <tr>
+                            <td>State & PIN</td>
+                            <td>{{ student.state }} - {{ student.postal_code }}</td>
+                        </tr>
+                        <tr>
+                            <td>Country</td>
+                            <td>{{ student.country }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-graduation-cap me-2"></i>Academic Information
+                </div>
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-university me-1"></i>Program Details
+                    </div>
+                    <table class="table info-table">
+                        <tr>
+                            <td>Program</td>
+                            <td>{{ student.get_program_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Current Semester</td>
+                            <td>{{ student.get_semester_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admission Year</td>
+                            <td>{{ student.admission_year }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="section-title mt-4">
+                        <i class="fas fa-user-shield me-1"></i>Emergency Contact
+                    </div>
+                    <table class="table info-table">
+                        <tr>
+                            <td>Contact Name</td>
+                            <td>{{ student.emergency_contact_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Relation</td>
+                            <td>{{ student.emergency_contact_relation }}</td>
+                        </tr>
+                        <tr>
+                            <td>Contact Phone</td>
+                            <td>{{ student.emergency_contact_phone }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance & Performance -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-check me-2"></i>Attendance Record
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="stat-card">
+                                <div class="stat-number text-info">{{ total_classes }}</div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card">
+                                <div class="stat-number text-success">{{ present_classes }}</div>
+                                <div class="stat-label">Present</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card">
+                                <div class="stat-number text-danger">{{ absent_classes }}</div>
+                                <div class="stat-label">Absent</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if attendance_warning %}
+                        <div class="attendance-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>⚠ Attendance Shortage</h6>
+                            <p class="mb-0">Student's attendance is below 75% ({{ attendance_percentage|floatformat:1 }}%). Immediate attention required as per university regulations.</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if attendance_data %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendance in attendance_data|slice:":5" %}
+                                        <tr>
+                                            <td>{{ attendance.date|date:"d M Y" }}</td>
+                                            <td>
+                                                {% if attendance.is_present %}
+                                                    <span class="badge performance-badge performance-excellent">PRESENT</span>
+                                                {% else %}
+                                                    <span class="badge performance-badge performance-poor">ABSENT</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if not attendance.is_present %}
+                                                    <small class="text-muted">Student was absent - makeup class required</small>
+                                                {% else %}
+                                                    <small class="text-muted">Regular attendance maintained</small>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h6>No Attendance Records</h6>
+                            <p>Start marking attendance to see student's attendance history.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i>Performance Record
+                </div>
+                <div class="card-body">
+                    {% if performances %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Marks</th>
+                                        <th>Grade</th>
+                                        <th>Exam Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for performance in performances|slice:":5" %}
+                                        <tr>
+                                            <td><strong>{{ performance.subject|upper }}</strong></td>
+                                            <td>{{ performance.marks_obtained }}/{{ performance.total_marks }}</td>
+                                            <td>
+                                                <div class="progress-enhanced">
+                                                    <div class="progress-bar-enhanced {% if performance.percentage >= 75 %}bg-success{% elif performance.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ performance.percentage }}%">
+                                                        {{ performance.percentage|floatformat:1 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="performance-badge {% if performance.remark == 'Good' %}performance-excellent{% elif performance.remark == 'Average' %}performance-average{% else %}performance-poor{% endif %}">
+                                                    {{ performance.remark }}
+                                                </span>
+                                            </td>
+                                            <td>{{ performance.exam_date|date:"d M Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <h6>No Performance Records</h6>
+                            <p>Add marks and performance data to track student's academic progress.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-section">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="text-center">
+                    <div class="signature-line"></div>
+                    <small>Student Signature</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-center">
+                    <div class="signature-line"></div>
+                    <small>Class Coordinator / Faculty Advisor</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Alert Popup -->
+{% if attendance_percentage < 75 %}
+<div class="attendance-popup" id="attendanceAlertPopup">
+    <div class="attendance-popup-content">
+        <div class="attendance-popup-header">
+            <h3><i class="fas fa-exclamation-triangle me-2"></i>⚠️ Attendance Alert</h3>
+        </div>
+        <div class="attendance-popup-body">
+            <div class="attendance-percentage">{{ attendance_percentage|floatformat:1 }}%</div>
+            <p class="mb-2"><strong>{{ student.full_name|upper }}</strong> has attendance below the required 75% threshold.</p>
+            <p class="text-muted">Immediate action is required as per university regulations. The student may face academic penalties if attendance is not improved.</p>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Present: {{ present_classes }}/{{ total_classes }} classes
+                </small>
+            </div>
+        </div>
+        <div class="attendance-popup-footer">
+            <button class="btn btn-popup-close" onclick="closeAttendancePopup()">
+                <i class="fas fa-times me-1"></i>Close
+            </button>
+            <a href="{% url 'attendance_management' %}" class="btn btn-popup-action">
+                <i class="fas fa-calendar-check me-1"></i>Mark Attendance
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if attendance_percentage < 75 %}
+        setTimeout(function() {
+            document.getElementById('attendanceAlertPopup').style.display = 'flex';
+        }, 1000);
+    {% endif %}
+});
+
+function closeAttendancePopup() {
+    document.getElementById('attendanceAlertPopup').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const popup = document.getElementById('attendanceAlertPopup');
+    if (event.target == popup) {
+        popup.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

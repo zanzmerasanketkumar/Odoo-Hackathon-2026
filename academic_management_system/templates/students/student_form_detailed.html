@@ -1,0 +1,719 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<style>
+.student-form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.student-form-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="30" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.student-form-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+.form-section-card {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: white;
+}
+
+.form-section-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.form-section-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.form-section-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0d6efd, #0dcaf0, #0d6efd);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.form-section-body {
+    padding: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: white;
+    transform: translateY(-2px);
+}
+
+.form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: white;
+    transform: translateY(-2px);
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+}
+
+.btn-reset {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-reset:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+}
+
+.progress-indicator {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #0d6efd;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.progress-step::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    right: -50%;
+    height: 2px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.progress-step:last-child::before {
+    display: none;
+}
+
+.progress-step.active::before {
+    background: #0d6efd;
+}
+
+.progress-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active .progress-icon {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.progress-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.progress-step.active .progress-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.field-group {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.field-group:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+.field-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 1px solid #dc3545;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    color: #721c24;
+    font-weight: 500;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.success-message {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 1px solid #28a745;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    color: #155724;
+    font-weight: 500;
+}
+
+.form-floating-label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background: white;
+    padding: 0 5px;
+    font-size: 0.8rem;
+    color: #0d6efd;
+    font-weight: 600;
+    border-radius: 5px;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .student-form-header {
+        padding: 2rem 0;
+    }
+    
+    .form-section-body {
+        padding: 1.5rem;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .progress-step::before {
+        display: none;
+    }
+    
+    .btn-submit, .btn-reset {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<!-- Student Form Header -->
+<div class="student-form-header">
+    <div class="container text-center">
+        <h1 class="mb-3">
+            <i class="fas fa-user-graduate me-3"></i>
+            {{ title }}
+        </h1>
+        <p class="mb-0">Complete the form below to add a new student to the system</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        <div class="progress-steps">
+            <div class="progress-step active">
+                <div class="progress-icon">1</div>
+                <div class="progress-label">Basic Info</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-icon">2</div>
+                <div class="progress-label">Contact</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-icon">3</div>
+                <div class="progress-label">Academic</div>
+            </div>
+            <div class="progress-step">
+                <div class="progress-icon">4</div>
+                <div class="progress-label">Emergency</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="studentForm">
+        {% csrf_token %}
+        
+        <!-- Basic Information Section -->
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <i class="fas fa-user me-2"></i>Basic Information
+            </div>
+            <div class="form-section-body">
+                <div class="field-group">
+                    <div class="field-group-title">
+                        <i class="fas fa-id-card me-1"></i>Personal Details
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name *</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.first_name.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name *</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.last_name.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth *</label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.date_of_birth.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.gender.id_for_label }}" class="form-label">Gender *</label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.gender.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                                {% if form.blood_group.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.blood_group.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <i class="fas fa-phone me-2"></i>Contact Information
+            </div>
+            <div class="form-section-body">
+                <div class="field-group">
+                    <div class="field-group-title">
+                        <i class="fas fa-address-card me-1"></i>Contact Details
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number *</label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.phone_number.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Include country code (e.g., +91 9876543210)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.personal_email.id_for_label }}" class="form-label">Personal Email *</label>
+                                {{ form.personal_email }}
+                                {% if form.personal_email.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.personal_email.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Personal email address for communication</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address *</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.address.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">City *</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.city.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.state.id_for_label }}" class="form-label">State *</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.state.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.postal_code.id_for_label }}" class="form-label">PIN Code *</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.postal_code.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Country *</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.country.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Information Section -->
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <i class="fas fa-graduation-cap me-2"></i>Academic Information
+            </div>
+            <div class="form-section-body">
+                <div class="field-group">
+                    <div class="field-group-title">
+                        <i class="fas fa-university me-1"></i>Program Details
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.program.id_for_label }}" class="form-label">Program *</label>
+                                {{ form.program }}
+                                {% if form.program.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.program.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.semester.id_for_label }}" class="form-label">Current Semester *</label>
+                                {{ form.semester }}
+                                {% if form.semester.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.semester.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact Section -->
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <i class="fas fa-user-shield me-2"></i>Emergency Contact
+            </div>
+            <div class="form-section-body">
+                <div class="field-group">
+                    <div class="field-group-title">
+                        <i class="fas fa-phone-alt me-1"></i>Emergency Details
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.emergency_contact_name.id_for_label }}" class="form-label">Contact Name *</label>
+                                {{ form.emergency_contact_name }}
+                                {% if form.emergency_contact_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.emergency_contact_name.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Parent, guardian, or relative name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.emergency_contact_relation.id_for_label }}" class="form-label">Relation *</label>
+                                {{ form.emergency_contact_relation }}
+                                {% if form.emergency_contact_relation.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.emergency_contact_relation.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Father, Mother, Guardian, etc.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.emergency_contact_phone.id_for_label }}" class="form-label">Contact Phone *</label>
+                                {{ form.emergency_contact_phone }}
+                                {% if form.emergency_contact_phone.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ form.emergency_contact_phone.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Emergency contact number</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="text-center mt-5">
+            <button type="submit" class="btn btn-submit btn-lg me-3">
+                <i class="fas fa-save me-2"></i>Save Student
+            </button>
+            <button type="reset" class="btn btn-reset btn-lg">
+                <i class="fas fa-redo me-2"></i>Reset Form
+            </button>
+            <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-lg ms-3">
+                <i class="fas fa-arrow-left me-2"></i>Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Progress step animation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('studentForm');
+    const progressSteps = document.querySelectorAll('.progress-step');
+    const formSections = document.querySelectorAll('.form-section-card');
+    
+    // Update progress based on scroll
+    function updateProgress() {
+        const scrollPosition = window.scrollY + 200;
+        
+        formSections.forEach((section, index) => {
+            const sectionTop = section.offsetTop;
+            const sectionBottom = sectionTop + section.offsetHeight;
+            
+            if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                progressSteps.forEach((step, stepIndex) => {
+                    if (stepIndex <= index) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                });
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateProgress);
+    
+    // Form validation enhancement
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && !this.value) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            this.classList.add('is-focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.classList.remove('is-focused');
+        });
+    });
+    
+    // Auto-format phone numbers
+    const phoneInputs = form.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                value = value.slice(0, 10);
+            }
+            if (value.length > 6) {
+                value = value.slice(0, 6) + '-' + value.slice(6);
+            } else if (value.length > 3) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            }
+            this.value = value;
+        });
+    });
+    
+    // Form submission animation
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('.btn-submit');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

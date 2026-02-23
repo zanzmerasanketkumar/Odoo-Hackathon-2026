@@ -1,0 +1,257 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* Custom admin styles */
+.header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%) !important;
+    border-bottom: none;
+}
+
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: white !important;
+    font-weight: 600;
+}
+
+#branding h1 {
+    font-size: 20px;
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+}
+
+.navbar a {
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+    color: white !important;
+}
+
+.user-info {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.breadcrumbs {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.breadcrumbs a {
+    color: #0d6efd;
+}
+
+.breadcrumbs a:hover {
+    color: #0a58ca;
+}
+
+/* Module styling */
+.module h2, .module caption {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+}
+
+.module th, .module td {
+    border-color: #e9ecef;
+}
+
+/* Button styling */
+.button, input[type=submit], input[type=button], .submit-row input {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+/* Object tools */
+.object-tools a {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.object-tools a:hover {
+    background: linear-gradient(135deg, #157347 0%, #1ea085 100%);
+}
+
+/* Add link styling */
+.addlink {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.addlink:hover {
+    background: linear-gradient(135deg, #157347 0%, #1ea085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
+}
+
+/* Changelist table styling */
+.results table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.results th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.results tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Form styling */
+.form-row {
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 0;
+}
+
+.form-row:last-child {
+    border-bottom: none;
+}
+
+.form-row label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-row input, .form-row select, .form-row textarea {
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: border-color 0.3s ease;
+}
+
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: #0d6efd;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+/* Error styling */
+.errorlist {
+    background: #f8d7da;
+    color: #842029;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #f5c6cb;
+    margin-top: 5px;
+}
+
+/* Success message styling */
+.messagelist .success {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* Dashboard styling */
+.dashboard .module {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard .module h2 {
+    margin: 0;
+    padding: 15px;
+}
+
+.dashboard .module ul {
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard .module li {
+    border-bottom: 1px solid #e9ecef;
+    padding: 12px 15px;
+    transition: background-color 0.3s ease;
+}
+
+.dashboard .module li:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.dashboard .module li:last-child {
+    border-bottom: none;
+}
+
+.dashboard .module a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.dashboard .module a:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+/* Footer styling */
+#footer {
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    color: #6c757d;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header {
+        padding: 10px;
+    }
+    
+    #branding h1 {
+        font-size: 16px;
+    }
+    
+    .dashboard .module {
+        margin-bottom: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">
+    <i class="fas fa-graduation-cap"></i> Smart Attendance Tracker
+</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+<div id="footer">
+    <p>&copy; 2026 AI-Assisted Smart Attendance & Performance Tracker | Gujarat Vidyapith</p>
+</div>
+{% endblock %}

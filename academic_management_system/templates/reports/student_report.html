@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Report - {{ student.full_name }} - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        page-break-inside: auto;
+    }
+    
+    .table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    body {
+        background-color: white !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .navbar,
+    footer {
+        display: none !important;
+    }
+    
+    h1 {
+        font-size: 24px !important;
+    }
+    
+    .report-header {
+        text-align: center;
+        border-bottom: 3px solid #000;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border: 1px solid #000;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+}
+
+.report-header {
+    text-align: center;
+    border-bottom: 3px solid #0d6efd;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    margin-top: 30px;
+}
+
+.performance-badge {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.performance-good {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.performance-average {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.performance-poor {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.attendance-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-left: 4px solid #ffc107;
+}
+
+.signature-section {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #000;
+}
+
+.signature-line {
+    border-bottom: 1px solid #000;
+    width: 200px;
+    margin-bottom: 5px;
+}
+</style>
+
+<div class="container">
+    <!-- Report Header -->
+    <div class="report-header">
+        <h2 class="mb-2">
+            <i class="fas fa-university me-2"></i>
+            Gujarat Vidyapith
+        </h2>
+        <h4 class="text-muted mb-3">Department of Computer Science</h4>
+        <h5 class="mb-0">Student Academic Performance Report</h5>
+        <p class="text-muted">Academic Year: {{ student.admission_year }}-{{ student.admission_year|add:1 }}</p>
+    </div>
+
+    <!-- Student Information -->
+    <div class="card mb-4">
+        <div class="section-title">
+            <i class="fas fa-user me-2"></i>Student Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td width="30%"><strong>Student ID:</strong></td>
+                            <td><code>{{ student.student_id }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Full Name:</strong></td>
+                            <td>{{ student.full_name|upper }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date of Birth:</strong></td>
+                            <td>{{ student.date_of_birth }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gender:</strong></td>
+                            <td>{{ student.get_gender_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Blood Group:</strong></td>
+                            <td>{{ student.blood_group|default:"N/A" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td width="30%"><strong>Institutional Email:</strong></td>
+                            <td><code>{{ student.email_id }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Personal Email:</strong></td>
+                            <td>{{ student.personal_email }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phone Number:</strong></td>
+                            <td>{{ student.phone_number }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Address:</strong></td>
+                            <td>{{ student.address }}, {{ student.city }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>State & PIN:</strong></td>
+                            <td>{{ student.state }} - {{ student.postal_code }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Information -->
+    <div class="card mb-4">
+        <div class="section-title">
+            <i class="fas fa-graduation-cap me-2"></i>Academic Information
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Program:</strong></td>
+                            <td>{{ student.get_program_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Semester:</strong></td>
+                            <td>{{ student.get_semester_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Admission Year:</strong></td>
+                            <td>{{ student.admission_year }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="mb-3">Performance Summary</h6>
+                    <div class="text-center mb-3">
+                        <h3 class="text-primary">{{ attendance_percentage|floatformat:1 }}%</h3>
+                        <p class="mb-0">Attendance</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-success">{{ average_marks|floatformat:1 }}</h3>
+                        <p class="mb-0">Average Marks</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="mb-3">Emergency Contact</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Name:</strong></td>
+                            <td>{{ student.emergency_contact_name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Relation:</strong></td>
+                            <td>{{ student.emergency_contact_relation }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phone:</strong></td>
+                            <td>{{ student.emergency_contact_phone }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Details -->
+    <div class="card mb-4">
+        <div class="section-title">
+            <i class="fas fa-calendar-check me-2"></i>Attendance Record
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-info">{{ total_classes }}</h4>
+                        <p class="mb-0">Total Classes</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-success">{{ present_classes }}</h4>
+                        <p class="mb-0">Present</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-danger">{{ total_classes|add:'0'|add:present_classes }}</h4>
+                        <p class="mb-0">Absent</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-primary">{{ attendance_percentage|floatformat:1 }}%</h4>
+                        <p class="mb-0">Percentage</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if attendance_warning %}
+                <div class="alert attendance-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>⚠ Attendance Shortage Warning</h6>
+                    <p class="mb-0">Student's attendance is below 75% ({{ attendance_percentage|floatformat:1 }}%). Immediate attention required as per university regulations.</p>
+                </div>
+            {% endif %}
+            
+            {% if attendance_data %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance in attendance_data %}
+                                <tr>
+                                    <td>{{ attendance.date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% if attendance.is_present %}
+                                            <span class="badge bg-success">PRESENT</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">ABSENT</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not attendance.is_present %}
+                                            <small class="text-muted">Student was absent - makeup class required</small>
+                                        {% else %}
+                                            <small class="text-muted">Regular attendance maintained</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No attendance records found for this student.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Performance Details -->
+    <div class="card mb-4">
+        <div class="section-title">
+            <i class="fas fa-chart-line me-2"></i>Academic Performance
+        </div>
+        <div class="card-body">
+            {% if performances %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Marks Obtained</th>
+                                <th>Total Marks</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Exam Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for performance in performances %}
+                                <tr>
+                                    <td><strong>{{ performance.subject|upper }}</strong></td>
+                                    <td class="text-center">{{ performance.marks_obtained }}</td>
+                                    <td class="text-center">{{ performance.total_marks }}</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if performance.percentage >= 75 %}bg-success{% elif performance.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ performance.percentage }}%">
+                                                {{ performance.percentage|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="performance-badge {% if performance.remark == 'Good' %}performance-good{% elif performance.remark == 'Average' %}performance-average{% else %}performance-poor{% endif %}">
+                                            {{ performance.remark }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">{{ performance.exam_date|date:"d M Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Performance Analysis -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Performance Analysis</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h4 class="text-success">{{ good_count }}</h4>
+                                    <p class="mb-0">Excellent Performance</p>
+                                    <small class="text-muted">(≥ 75%)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h4 class="text-warning">{{ average_count }}</h4>
+                                    <p class="mb-0">Average Performance</p>
+                                    <small class="text-muted">(50-74%)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-danger">
+                                <div class="card-body text-center">
+                                    <h4 class="text-danger">{{ needs_improvement_count }}</h4>
+                                    <p class="mb-0">Needs Improvement</p>
+                                    <small class="text-muted">(&lt; 50%)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted">No performance records found for this student.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="card mb-4">
+        <div class="section-title">
+            <i class="fas fa-robot me-2"></i>Academic Insights & Recommendations
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Attendance Analysis</h6>
+                    {% if attendance_percentage >= 90 %}
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-check-circle me-2"></i>Excellent Attendance</h6>
+                            <p class="mb-0">Student maintains {{ attendance_percentage|floatformat:1 }}% attendance - outstanding commitment to academics.</p>
+                        </div>
+                    {% elif attendance_percentage >= 75 %}
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Good Attendance</h6>
+                            <p class="mb-0">Student maintains {{ attendance_percentage|floatformat:1 }}% attendance - meets minimum requirements.</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Poor Attendance</h6>
+                            <p class="mb-0">Student's attendance is {{ attendance_percentage|floatformat:1 }}% - below minimum 75% requirement.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Performance Analysis</h6>
+                    {% if average_marks >= 75 %}
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-trophy me-2"></i>Excellent Academic Performance</h6>
+                            <p class="mb-0">Student scores {{ average_marks|floatformat:1 }}% average - outstanding academic achievement.</p>
+                        </div>
+                    {% elif average_marks >= 50 %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-chart-line me-2"></i>Average Academic Performance</h6>
+                            <p class="mb-0">Student scores {{ average_marks|floatformat:1 }}% average - room for improvement.</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Poor Academic Performance</h6>
+                            <p class="mb-0">Student scores {{ average_marks|floatformat:1 }}% average - requires academic support.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="alert alert-light">
+                <h6><i class="fas fa-lightbulb me-2"></i>Recommendations</h6>
+                {% if attendance_warning and average_marks < 50 %}
+                    <p class="mb-0"><strong>URGENT:</strong> Student requires immediate academic counseling and attendance improvement plan. Both attendance and performance are below acceptable levels.</p>
+                {% elif attendance_warning %}
+                    <p class="mb-0"><strong>PRIORITY:</strong> Focus on improving attendance to meet minimum 75% requirement. Regular attendance is crucial for academic success.</p>
+                {% elif average_marks < 50 %}
+                    <p class="mb-0"><strong>FOCUS:</strong> Provide additional academic support and tutoring. Student needs help with subject understanding and study techniques.</p>
+                {% else %}
+                    <p class="mb-0"><strong>EXCELLENT:</strong> Student is performing well academically. Continue monitoring progress and provide opportunities for advanced learning.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-section no-print">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="text-center">
+                    <div class="signature-line"></div>
+                    <small>Student Signature</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-center">
+                    <div class="signature-line"></div>
+                    <small>Class Coordinator / Faculty Advisor</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Footer -->
+    <div class="text-center mt-5 mb-3">
+        <p class="text-muted mb-0">
+            <small>
+                This report is generated electronically and is valid for academic purposes.<br>
+                Generated on {% now "d F Y, H:i" %} | AI-Assisted Smart Attendance & Performance Tracker<br>
+                Gujarat Vidyapith | Department of Computer Science
+            </small>
+        </p>
+    </div>
+
+    <!-- Print Button -->
+    <div class="text-center no-print mb-4">
+        <button onclick="window.print()" class="btn btn-primary btn-lg">
+            <i class="fas fa-print me-2"></i>Print Report
+        </button>
+        <a href="{% url 'student_report_csv' student.pk %}" class="btn btn-success btn-lg ms-2">
+            <i class="fas fa-file-csv me-2"></i>Export CSV
+        </a>
+        <a href="{% url 'student_detail' student.pk %}" class="btn btn-secondary btn-lg ms-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Student
+        </a>
+    </div>
+</div>
+{% endblock %}

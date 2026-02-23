@@ -1,0 +1,46 @@
+{% extends 'admin/base.html' %}
+{% block title %}Fix Email ID Mismatches{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Fix Email ID Mismatches
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>What this does:</h6>
+                        <p class="mb-0">This utility fixes any students where the email ID doesn't match their student ID format. 
+                        The correct format should be: <code>[student_id].gvp@gujaratvidyapith.org</code></p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Important:</h6>
+                        <p class="mb-0">This will update all mismatched email IDs to match their corresponding student IDs. 
+                        This operation is safe and will not delete any data.</p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-wrench me-2"></i>
+                                Fix Email ID Mismatches
+                            </button>
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

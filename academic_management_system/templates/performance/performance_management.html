@@ -1,0 +1,612 @@
+{% extends 'base.html' %}
+
+{% block title %}Performance Management - Smart Attendance Tracker{% endblock %}
+
+{% block content %}
+<style>
+.performance-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.performance-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="10" cy="50" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="90" cy="30" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.performance-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+.performance-card {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: white;
+}
+
+.performance-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.performance-card .card-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.performance-card .card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0d6efd, #0dcaf0, #0d6efd);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.performance-card .card-body {
+    padding: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: white;
+    transform: translateY(-2px);
+}
+
+.form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: white;
+    transform: translateY(-2px);
+}
+
+.btn-performance {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-performance:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+}
+
+.btn-reset {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-reset:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+}
+
+.ai-insights-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #0d6efd;
+    transition: all 0.3s ease;
+}
+
+.ai-insights-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+.performance-grade {
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.performance-grade:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.grade-excellent {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+    color: #155724;
+}
+
+.grade-average {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.grade-poor {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.progress-enhanced {
+    height: 25px;
+    border-radius: 12px;
+    background: #e9ecef;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-enhanced {
+    height: 100%;
+    border-radius: 12px;
+    transition: all 0.5s ease;
+    position: relative;
+    background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+}
+
+.progress-bar-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.performance-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.performance-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.student-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.student-info-card:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+}
+
+.table-enhanced {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.table-enhanced thead {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    color: white;
+}
+
+.table-enhanced tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table-enhanced tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+}
+
+.btn-action {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 20px;
+    border: 2px dashed #dee2e6;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .performance-header {
+        padding: 2rem 0;
+    }
+    
+    .performance-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .btn-performance, .btn-reset {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<!-- Performance Header -->
+<div class="performance-header">
+    <div class="container text-center">
+        <h1 class="mb-3">
+            <i class="fas fa-chart-line me-3"></i>
+            Performance Management
+        </h1>
+        <p class="mb-0">Track and manage student academic performance with AI-powered insights</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="performance-card">
+                <div class="card-header">
+                    <i class="fas fa-plus-circle me-2"></i>Add Performance Record
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.student.id_for_label }}" class="form-label">Select Student *</label>
+                                    {{ form.student }}
+                                    {% if form.student.errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ form.student.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.subject.id_for_label }}" class="form-label">Subject *</label>
+                                    {{ form.subject }}
+                                    {% if form.subject.errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ form.subject.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.marks_obtained.id_for_label }}" class="form-label">Marks Obtained *</label>
+                                    {{ form.marks_obtained }}
+                                    {% if form.marks_obtained.errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ form.marks_obtained.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.total_marks.id_for_label }}" class="form-label">Total Marks *</label>
+                                    {{ form.total_marks }}
+                                    {% if form.total_marks.errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ form.total_marks.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.exam_date.id_for_label }}" class="form-label">Exam Date *</label>
+                                    {{ form.exam_date }}
+                                    {% if form.exam_date.errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {{ form.exam_date.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-performance">
+                                <i class="fas fa-save me-2"></i>Save Performance
+                            </button>
+                            <button type="reset" class="btn btn-reset">
+                                <i class="fas fa-redo me-2"></i>Reset Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="performance-card">
+                <div class="card-header">
+                    <i class="fas fa-robot me-2"></i>AI-Generated Remarks
+                </div>
+                <div class="card-body">
+                    <div class="performance-grade grade-excellent">
+                        <h5 class="mb-2">
+                            <i class="fas fa-trophy me-2"></i>Excellent
+                        </h5>
+                        <p class="mb-0"><strong>≥ 75%</strong></p>
+                        <small>Outstanding performance</small>
+                    </div>
+                    
+                    <div class="performance-grade grade-average">
+                        <h5 class="mb-2">
+                            <i class="fas fa-chart-line me-2"></i>Average
+                        </h5>
+                        <p class="mb-0"><strong>50–74%</strong></p>
+                        <small>Room for improvement</small>
+                    </div>
+                    
+                    <div class="performance-grade grade-poor">
+                        <h5 class="mb-2">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Needs Improvement
+                        </h5>
+                        <p class="mb-0"><strong>&lt; 50%</strong></p>
+                        <small>Requires attention</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="ai-insights-card">
+                        <h6 class="mb-3">
+                            <i class="fas fa-brain me-2"></i>Performance Insights
+                        </h6>
+                        <p class="small text-muted mb-3">
+                            The system automatically generates performance remarks based on percentage scores. This helps identify students who may need additional academic support.
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <small class="text-muted">AI-powered analysis</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="performance-card">
+                <div class="card-header">
+                    <i class="fas fa-history me-2"></i>Recent Performance Records
+                </div>
+                <div class="card-body">
+                    {% if performances %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-enhanced">
+                                <thead>
+                                    <tr>
+                                        <th>Student Information</th>
+                                        <th>Subject</th>
+                                        <th>Marks</th>
+                                        <th>Performance</th>
+                                        <th>Grade</th>
+                                        <th>Exam Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for performance in performances %}
+                                        <tr>
+                                            <td>
+                                                <div class="student-info-card">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3">
+                                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: 600;">
+                                                                {{ performance.student.full_name|first|upper }}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <strong>{{ performance.student.full_name }}</strong><br>
+                                                            <small class="text-muted">{{ performance.student.student_id }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ performance.subject|upper }}</span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ performance.marks_obtained }}</strong> / {{ performance.total_marks }}
+                                            </td>
+                                            <td>
+                                                <div class="progress-enhanced">
+                                                    <div class="progress-bar-enhanced {% if performance.percentage >= 75 %}bg-success{% elif performance.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ performance.percentage }}%">
+                                                        {{ performance.percentage|floatformat:1 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="performance-badge {% if performance.remark == 'Good' %}bg-success{% elif performance.remark == 'Average' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ performance.remark }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>{{ performance.exam_date|date:"d M Y" }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'student_detail' performance.student.pk %}" class="btn btn-action btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <h4>No Performance Records</h4>
+                            <p>Start adding performance records to track student academic progress.</p>
+                            <a href="{% url 'student_list' %}" class="btn btn-primary">
+                                <i class="fas fa-users me-2"></i>View Students
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set today's date as default for exam date
+document.addEventListener('DOMContentLoaded', function() {
+    const examDateInput = document.getElementById('id_exam_date');
+    if (examDateInput) {
+        examDateInput.valueAsDate = new Date();
+    }
+    
+    // Auto-calculate percentage when marks change
+    const marksObtained = document.getElementById('id_marks_obtained');
+    const totalMarks = document.getElementById('id_total_marks');
+    
+    function calculatePercentage() {
+        if (marksObtained.value && totalMarks.value) {
+            const percentage = (marksObtained.value / totalMarks.value) * 100;
+            console.log('Calculated percentage:', percentage.toFixed(1) + '%');
+        }
+    }
+    
+    if (marksObtained && totalMarks) {
+        marksObtained.addEventListener('input', calculatePercentage);
+        totalMarks.addEventListener('input', calculatePercentage);
+    }
+    
+    // Form submission animation
+    const form = document.querySelector('form[method="post"]');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = form.querySelector('.btn-performance');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            submitBtn.disabled = true;
+        });
+    }
+});
+</script>
+{% endblock %}
